@@ -1,0 +1,35 @@
+propel:
+
+
+
+
+
+
+
+
+
+
+####  Examples ####
+#
+#  invoice:
+#    _attributes:    { phpName: Invoice }
+#    id:
+#    public_primary_key:          { type: char, size: 8, index: unique }
+#    subscription_id:             { type: integer, foreignTable: subscription, foreignReference: id, onDelete: restrict, onUpdate: restrict }
+#    immutable_client_id:         { type: integer, foreignTable: client, foreignReference: id, required: true, onDelete: restrict, onUpdate: restrict }
+#    application_id:              { type: integer, foreignTable: application, foreignReference: id, required: true, onDelete: restrict, onUpdate: restrict }
+#    amount:                      { type: integer, required: true }
+#    paid:                        { type: boolean, index: true, required: true, default: false }
+#    date_created:                { type: timestamp, index: true, required: true }
+#    date_paid:                   { type: timestamp, index: true }
+#    next_bill_date:              { type: timestamp, index: true }
+#    failed_attempts:             { type: varchar(255), index: true, required: true, default: 0 }
+#    first_invoice:               { type: boolean }
+#    created_at:
+#    updated_at:
+#    
+#  transaction_status:
+#    _attributes:    { phpName: TransactionStatus }
+#    id:
+#    name:                        { type: varchar(100) }
+#    unique_key:                  { type: varchar(100), index: unique }

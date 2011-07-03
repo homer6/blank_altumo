@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+cd htdocs/project
+./symfony project:permissions
+
+create database with /database/create_database.sql
+
+untemplate config and index files
+
+setup vhost and dns entries
+make apache logs folder writable
+
+
+<VirtualHost *:80>
+
+        ServerAdmin technical@my-company-name.com
+        ServerName ssperandeo.dev.my-project-name.com
+
+        DocumentRoot /home/ssperandeo/dev/my-company-name/my-project-name.com/htdocs/project/web
+
+        <Directory /home/ssperandeo/dev/my-company-name/my-project-name.com/htdocs/project/web>
+
+                <FilesMatch "^\.gitignore">
+                    Order allow,deny
+                    Deny from all
+                </FilesMatch>
+
+                Options Indexes FollowSymLinks
+                AllowOverride All
+                Order allow,deny
+                allow from all
+
+        </Directory>
+
+        ErrorLog /home/ssperandeo/dev/my-company-name/my-project-name.com/htdocs/logs/error.log
+        CustomLog /home/ssperandeo/dev/my-company-name/my-project-name.com/htdocs/logs/access.log combined
+
+</VirtualHost>

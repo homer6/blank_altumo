@@ -1,0 +1,18 @@
+Quick and dirty, setting up a shared, central git repository for your team.
+
+For the website: my-project-name.com
+
+1. On your git server, git.my-company-name.com (the centralised repository)
+    #Create a neutral user and a bare repository 
+        useradd -m central
+        sudo su central -
+        cd /home/central/dev/my-company-name
+        git clone --bare git@github.com:homer6/blank_altumo.git my-project-name.com.git
+
+2. On Each Environment (Each Developers's personal Dev, shared Testing, shared Staging and shared Production)
+    #Create a working tree for an environment
+        git clone -o central ssh://central@git.my-company-name.com:22/home/central/dev/my-company-name/my-project-name.com.git
+
+3. Add each user's public key to the
+    ssh-keygen (generates a public key)
+    copy that to each line in the ~/.ssh/authorized_hosts file
