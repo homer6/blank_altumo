@@ -3,9 +3,12 @@ Overview
 
 A ready-to-go symfony 1.4, propel 1.6 project loaded up with the sfAltumo plugin. 
 
-Symfony, Propel, Altumo and sfAltumo are all under the MIT license.
 
-Google Closule Library is under the Apache License Version 2.0
+Licensing
+------------
+
+    - Symfony, Propel, Altumo and sfAltumo are all under the MIT license.
+    - Google Closule Library is under the Apache License Version 2.0
 
 
 Dependencies
