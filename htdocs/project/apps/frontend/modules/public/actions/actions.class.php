@@ -12,8 +12,6 @@ class publicActions extends sfActions{
 
     public function executeIndex( sfWebRequest $request ){
         
-        
-
     }
 
 }

@@ -5,3 +5,10 @@
 homepage:
   url:   /
   param: { module: public, action: index }
+
+# sample api route
+api_list_users:
+  url:   /api/user/list
+  param: { module: public, action: index }
+  options:
+    export_to_javascript: true
