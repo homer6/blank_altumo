@@ -26,7 +26,7 @@ dev_ssperandeo:
 dev_jjaramillo:
   .settings:
     error_reporting:        <?php echo (E_ALL | E_STRICT)."\n" ?>
-    web_debug:              true
+    web_debug:              false
     cache:                  false
     no_script_name:         true
     etag:                   false

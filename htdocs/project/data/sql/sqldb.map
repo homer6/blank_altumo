@@ -1,0 +1,2 @@
+# Sqlfile -> Database map
+plugins.sfAltumo.lib.model.schema.sql=propel
