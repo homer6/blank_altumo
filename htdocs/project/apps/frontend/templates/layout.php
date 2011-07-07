@@ -13,6 +13,8 @@
             routes: <?php echo RoutingDumper::getRoutesAsKeyValuePairJson( '/^api\\_.+$/', array( 'export_to_javascript' => true ) ); ?>
         });
     </script>
+    
+    <script type="text/javascript" src="/js/app.js"></script>
   </head>
   <body>
     <?php echo $sf_content ?>
