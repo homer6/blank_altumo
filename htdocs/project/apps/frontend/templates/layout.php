@@ -8,13 +8,19 @@
     <?php include_stylesheets() ?>
     <?php include_javascripts() ?>
     
-    <script>
-        alt.load({
-            routes: <?php echo RoutingDumper::getRoutesAsKeyValuePairJson( '/^api\\_.+$/', array( 'export_to_javascript' => true ) ); ?>
-        });
+    <script> 
+        goog.require( 'altumo.core.Altumo' );
     </script>
     
-    <script type="text/javascript" src="/js/app.js"></script>
+    <script>
+
+            var alt = new altumo.core.Altumo({
+                routes: <?php echo RoutingDumper::getRoutesAsKeyValuePairJson( '/^api\\_.+$/', array( 'export_to_javascript' => true ) ); ?>
+            });
+            
+    </script>
+    
+    <script>goog.require( 'app.main' );</script>
   </head>
   <body>
     <?php echo $sf_content ?>
