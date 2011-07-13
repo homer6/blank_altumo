@@ -23,7 +23,7 @@ Dependencies
 Installation
 ------------
 
-   - git clone -o github_blank git@github.com:homer6/blank_altumo.git
+   - git clone -o blank_altumo git@github.com:homer6/blank_altumo.git
    - git submodule update --init --recursive
 
 Testing
