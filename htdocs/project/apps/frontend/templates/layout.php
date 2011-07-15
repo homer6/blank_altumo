@@ -15,7 +15,7 @@
     <script>
 
             var alt = new altumo.core.Altumo({
-                routes: <?php echo RoutingDumper::getRoutesAsKeyValuePairJson( '/^api\\_.+$/', array( 'export_to_javascript' => true ) ); ?>
+                routes: <?php echo \sfAltumoPlugin\Routing\RouteExporter::getRoutesAsKeyValuePairJson( '/^api\\_.+$/', array( 'export_to_javascript' => true ) ); ?>
             });
             
     </script>
