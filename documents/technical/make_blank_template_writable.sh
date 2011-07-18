@@ -16,18 +16,21 @@ git submodule update --init --recursive
 
 cd htdocs/project/plugins/sfAltumoPlugin
 git checkout master
+git pull
 git remote add github git@github.com:homer6/sfAltumoPlugin.git
 git submodule sync
 git submodule update --init --recursive
 
 cd lib/vendor/altumo
 git checkout master
+git pull
 git remote add github git@github.com:homer6/altumo.git
 git submodule sync
 git submodule update --init --recursive
 
 cd lib/javascript/vendor/google/closure-library
 git checkout master
+git pull
 git remote add github git@github.com:homer6/google-closure-library.git
 git submodule sync
 git submodule update --init --recursive
@@ -35,7 +38,8 @@ git submodule update --init --recursive
 cd ../../../../../../../../../../../../
 
 
-
+# if this is an existing project, in each of the above repositories, you may have to rename the remote before adding the new one:
+# git remote rename github origin
 
 
 
