@@ -14,7 +14,7 @@
  * 
  * @author		 Fabien Potencier <fabien.potencier@symfony-project.com>
  * @author		 François Zaninotto
- * @version		 $Revision: 1665 $
+ * @version		 $Revision: 2154 $
  * @package		 propel.runtime.query
  */
 class PropelModelPager implements IteratorAggregate, Countable
@@ -33,13 +33,13 @@ class PropelModelPager implements IteratorAggregate, Countable
 		$results         = null,
 		$resultsCounter  = 0;
 
-	public function __construct(Criteria $query, $maxPerPage = 10)
+	public function __construct(ModelCriteria $query, $maxPerPage = 10)
 	{
 		$this->setQuery($query);
 		$this->setMaxPerPage($maxPerPage);
 	}
 	
-	public function setQuery(Criteria $query)
+	public function setQuery(ModelCriteria $query)
 	{
 		$this->query = $query;
 	}
@@ -90,13 +90,12 @@ class PropelModelPager implements IteratorAggregate, Countable
 	/**
 	 * Get the collection of results in the page
 	 *
-	 * @return PropelObjectCollection A collection of results
+	 * @return PropelCollection A collection of results
 	 */
 	public function getResults()
 	{
 		if (null === $this->results) {
 			$this->results = $this->getQuery()
-				->setFormatter(ModelCriteria::FORMAT_OBJECT)
 				->find();
 		}
 		return $this->results;
@@ -329,7 +328,62 @@ class PropelModelPager implements IteratorAggregate, Countable
 			}
 		}
 	}
+
+	/**
+	 * Check whether the internal pointer is at the beginning of the list
+	 * @see       PropelCollection
+	 *
+	 * @return    boolean
+	 */
+	public function isFirst()
+	{
+		return $this->getResults()->isFirst();
+	}
+
+	/**
+	 * Check whether the internal pointer is at the end of the list
+	 * @see       PropelCollection
+	 *
+	 * @return    boolean
+	 */
+	public function isLast()
+	{
+		return $this->getResults()->isLast();
+	}
+
+	/**
+	 * Check if the collection is empty
+	 * @see       PropelCollection
+	 *
+	 * @return    boolean
+	 */
+	public function isEmpty()
+	{
+		return $this->getResults()->isEmpty();
+	}
 	
+	/**
+	 * Check if the current index is an odd integer
+	 * @see       PropelCollection
+	 *
+	 * @return    boolean
+	 */
+	public function isOdd()
+	{
+		return $this->getResults()->isOdd();
+	}
+	
+	/**
+	 * Check if the current index is an even integer
+	 * @see       PropelCollection
+	 *
+	 * @return    boolean
+	 */
+	public function isEven()
+	{
+		return $this->getResults()->isEven();
+	}
+		
 	public function getIterator()
 	{
 		return $this->getResults()->getIterator();

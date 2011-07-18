@@ -8,7 +8,7 @@
  * @license    MIT License
  */
 
-require_once 'builder/om/OMBuilder.php';
+require_once dirname(__FILE__) . '/OMBuilder.php';
 
 /**
  * Generates the empty PHP5 stub query class for use with single table inheritance.
@@ -35,6 +35,15 @@ class ExtensionQueryInheritanceBuilder extends OMBuilder
 	public function getUnprefixedClassname()
 	{
 		return $this->getChild()->getClassName() . 'Query';
+	}
+
+	/** 
+	 * Gets the package for the [base] object classes.
+	 * @return     string
+	 */
+	public function getPackage()
+	{
+		return ($this->getChild()->getPackage() ? $this->getChild()->getPackage() : parent::getPackage());
 	}
 
 	/**

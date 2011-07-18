@@ -14,7 +14,7 @@ require_once 'AggregateColumnRelationBehavior.php';
  * Keeps an aggregate column updated with related table
  *
  * @author     François Zaninotto
- * @version    $Revision: 1785 $
+ * @version    $Revision: 2090 $
  * @package    propel.generator.behavior.aggregate_column
  */
 class AggregateColumnBehavior extends Behavior
@@ -25,6 +25,7 @@ class AggregateColumnBehavior extends Behavior
 		'name'           => null,
 		'expression'     => null,
 		'foreign_table'  => null,
+		'foreign_schema' => null,
 	);
 	
 	/**
@@ -73,13 +74,18 @@ class AggregateColumnBehavior extends Behavior
 	{
 		$conditions = array();
 		$bindings = array();
+		$database = $this->getTable()->getDatabase();
 		foreach ($this->getForeignKey()->getColumnObjectsMapping() as $index => $columnReference) {
 			$conditions[] = $columnReference['local']->getFullyQualifiedName() . ' = :p' . ($index + 1);
 			$bindings[$index + 1]   = $columnReference['foreign']->getPhpName();
 		}
+		$tableName = $database->getTablePrefix() . $this->getParameter('foreign_table');
+		if ($database->getPlatform()->supportsSchemas() && $this->getParameter('foreign_schema')) {
+			$tableName = $this->getParameter('foreign_schema').'.'.$tableName;
+		}
 		$sql = sprintf('SELECT %s FROM %s WHERE %s',
 			$this->getParameter('expression'),
-			$this->getTable()->getDatabase()->getPlatform()->quoteIdentifier($this->getParameter('foreign_table')),
+			$database->getPlatform()->quoteIdentifier($tableName),
 			implode(' AND ', $conditions)
 		);
 		
@@ -99,7 +105,12 @@ class AggregateColumnBehavior extends Behavior
 	
 	protected function getForeignTable()
 	{
-		return $this->getTable()->getDatabase()->getTable($this->getParameter('foreign_table'));
+		$database = $this->getTable()->getDatabase();
+		$tableName = $database->getTablePrefix() . $this->getParameter('foreign_table');
+		if ($database->getPlatform()->supportsSchemas() && $this->getParameter('foreign_schema')) {
+			$tableName = $this->getParameter('foreign_schema'). '.' . $tableName;
+		}
+		return $database->getTable($tableName);
 	}
 
 	protected function getForeignKey()

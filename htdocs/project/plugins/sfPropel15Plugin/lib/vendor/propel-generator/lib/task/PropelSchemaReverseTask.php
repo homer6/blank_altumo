@@ -17,7 +17,7 @@ require_once 'model/PropelTypes.php';
  * the database metadata.
  *
  * @author     Hans Lellelid <hans@xmpl.org>
- * @version    $Revision: 1716 $
+ * @version    $Revision: 2175 $
  * @package    propel.generator.task
  */
 class PropelSchemaReverseTask extends PDOTask
@@ -259,7 +259,7 @@ class PropelSchemaReverseTask extends PDOTask
 	 */
 	public function setSamePhpName($v)
 	{
-		$this->samePhpName = $v;
+		$this->samePhpName = (boolean) $v;
 	}
 
 	/**
@@ -384,18 +384,16 @@ class PropelSchemaReverseTask extends PDOTask
 	{
 		$config = $this->getGeneratorConfig();
 		$con = $this->getConnection();
-
+		
+		$this->log('Reading database structure...');
+		
 		$database = new Database($this->getDatabaseName());
 		$database->setPlatform($config->getConfiguredPlatform($con));
-
-		// Some defaults ...
 		$database->setDefaultIdMethod(IDMethod::NATIVE);
-
 		$parser = $config->getConfiguredSchemaParser($con);
-
 		$nbTables = $parser->parse($database, $this);
 		
-		$this->log("Successfully Reverse Engineered " . $nbTables . " tables");
+		$this->log(sprintf('Successfully reverse engineered %d tables', $nbTables));
 
 		return $database;
 	}

@@ -21,7 +21,7 @@
  * @author     Hans Lellelid <hans@xmpl.org> (Propel)
  * @author     John D. McNally <jmcnally@collab.net> (Torque)
  * @author     Daniel Rall <dlr@collab.net> (Torque)
- * @version    $Revision: 1802 $
+ * @version    $Revision: 2168 $
  * @package    propel.runtime.map
  */
 class DatabaseMap
@@ -182,10 +182,10 @@ class DatabaseMap
   /** 
    * Convenience method to get the DBAdapter registered with Propel for this database. 
    * @return  DBAdapter
-   * @see     Propel::getDB(string) 
+   * @see     Propel::getDB(string)
    */ 
-  public function getDBAdapter() 
-  { 
-    return Propel::getDB($this->name); 
+  public function getDBAdapter()
+  {
+    return Propel::getDB($this->name);
   }  
 }

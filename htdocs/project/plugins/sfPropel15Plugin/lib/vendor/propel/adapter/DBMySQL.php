@@ -15,7 +15,7 @@
  * @author     Jon S. Stevens <jon@clearink.com> (Torque)
  * @author     Brett McLaughlin <bmclaugh@algx.net> (Torque)
  * @author     Daniel Rall <dlr@finemaltcoding.com> (Torque)
- * @version    $Revision: 1612 $
+ * @version    $Revision: 2090 $
  * @package    propel.runtime.adapter
  */
 class DBMySQL extends DBAdapter 
@@ -115,6 +115,15 @@ class DBMySQL extends DBAdapter
 	}
 
 	/**
+	 * @see        DBAdapter::quoteIdentifierTable()
+	 */
+	public function quoteIdentifierTable($table)
+	{
+		// e.g. 'database.table alias' should be escaped as '`database`.`table` `alias`'
+		return '`' . strtr($table, array('.' => '`.`', ' ' => '` `')) . '`';
+	}
+
+	/**
 	 * @see        DBAdapter::useQuoteIdentifier()
 	 */
 	public function useQuoteIdentifier()
@@ -140,6 +149,29 @@ class DBMySQL extends DBAdapter
 	public function random($seed = null)
 	{
 		return 'rand('.((int) $seed).')';
+	}
+	
+	/**
+	 * @see        DBAdapter::bindValue()
+	 */
+	public function bindValue(PDOStatement $stmt, $parameter, $value, ColumnMap $cMap)
+	{
+		$pdoType = $cMap->getPdoType();
+		// FIXME - This is a temporary hack to get around apparent bugs w/ PDO+MYSQL
+		// See http://pecl.php.net/bugs/bug.php?id=9919
+		if ($pdoType == PDO::PARAM_BOOL) {
+			$value = (int) $value;
+			$pdoType = PDO::PARAM_INT;
+			return $stmt->bindValue($parameter, $value, $pdoType);
+		} elseif ($cMap->isTemporal()) {
+			$value = $this->formatTemporalValue($value, $cMap);
+		} elseif (is_resource($value) && $cMap->isLob()) {
+			// we always need to make sure that the stream is rewound, otherwise nothing will
+			// get written to database.
+			rewind($value);
+		}
+
+		return $stmt->bindValue($parameter, $value, $pdoType);
 	}
 
 }

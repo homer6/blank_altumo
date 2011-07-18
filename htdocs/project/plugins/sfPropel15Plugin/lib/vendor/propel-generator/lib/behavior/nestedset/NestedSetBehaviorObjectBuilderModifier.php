@@ -79,27 +79,61 @@ protected \$aNestedSetParent = null;
 
 ";
 	}
-	
+
 	public function preSave($builder)
 	{
-		return "\$this->processNestedSetQueries(\$con);";
+		$peerClassname = $builder->getStubPeerBuilder()->getClassname();
+		$queryClassname = $builder->getStubQueryBuilder()->getClassname();
+
+		$script = "if (\$this->isNew() && \$this->isRoot()) {
+	// check if no other root exist in, the tree
+	\$nbRoots = $queryClassname::create()
+		->addUsingAlias($peerClassname::LEFT_COL, 1, Criteria::EQUAL)";
+
+		if ($this->behavior->useScope()) {
+			$script .= "
+		->addUsingAlias($peerClassname::SCOPE_COL, \$this->getScopeValue(), Criteria::EQUAL)";
+		}
+
+		$script .= "
+		->count(\$con);
+	if (\$nbRoots > 0) {
+			throw new PropelException(";
+
+		if ($this->behavior->useScope()) {
+			$script .= "sprintf('A root node already exists in this tree with scope \"%s\".', \$this->getScopeValue())";
+		} else {
+			$script .= "'A root node already exists in this tree. To allow multiple root nodes, add the `use_scope` parameter in the nested_set behavior tag.'";
+		}
+
+		$script .= ");
 	}
-		
+}
+\$this->processNestedSetQueries(\$con);";
+
+		return $script;
+	}
+
 	public function preDelete($builder)
 	{
 		$peerClassname = $builder->getStubPeerBuilder()->getClassname();
 		return "if (\$this->isRoot()) {
 	throw new PropelException('Deletion of a root node is disabled for nested sets. Use $peerClassname::deleteTree(" . ($this->behavior->useScope() ? '$scope' : '') . ") instead to delete an entire tree');
 }
-\$this->deleteDescendants(\$con);
+
+if (\$this->isInTree()) {
+	\$this->deleteDescendants(\$con);
+}
 ";
 	}
 
 	public function postDelete($builder)
 	{
 		$peerClassname = $builder->getStubPeerBuilder()->getClassname();
-		return "// fill up the room that was used by the node
-$peerClassname::shiftRLValues(-2, \$this->getRightValue() + 1, null" . ($this->behavior->useScope() ? ", \$this->getScopeValue()" : "") . ", \$con);
+		return "if (\$this->isInTree()) {
+	// fill up the room that was used by the node
+	$peerClassname::shiftRLValues(-2, \$this->getRightValue() + 1, null" . ($this->behavior->useScope() ? ", \$this->getScopeValue()" : "") . ", \$con);
+}
 ";
 	}
 	
@@ -693,7 +727,6 @@ public function hasChildren()
 	protected function addGetChildren(&$script)
 	{
 		$objectClassname = $this->objectClassname;
-		$peerClassname = $this->peerClassname;
 		$queryClassname = $this->queryClassname;
 		$script .= "
 /**
@@ -728,7 +761,6 @@ public function getChildren(\$criteria = null, PropelPDO \$con = null)
 	protected function addCountChildren(&$script)
 	{
 		$objectClassname = $this->objectClassname;
-		$peerClassname = $this->peerClassname;
 		$queryClassname = $this->queryClassname;
 		$script .= "
 /**
@@ -758,7 +790,6 @@ public function countChildren(\$criteria = null, PropelPDO \$con = null)
 	protected function addGetFirstChild(&$script)
 	{
 		$objectClassname = $this->objectClassname;
-		$peerClassname = $this->peerClassname;
 		$queryClassname = $this->queryClassname;
 		$script .= "
 /**
@@ -785,7 +816,6 @@ public function getFirstChild(\$query = null, PropelPDO \$con = null)
 	protected function addGetLastChild(&$script)
 	{
 		$objectClassname = $this->objectClassname;
-		$peerClassname = $this->peerClassname;
 		$queryClassname = $this->queryClassname;
 		$script .= "
 /**
@@ -812,7 +842,6 @@ public function getLastChild(\$query = null, PropelPDO \$con = null)
 	protected function addGetSiblings(&$script)
 	{
 		$objectClassname = $this->objectClassname;
-		$peerClassname = $this->peerClassname;
 		$queryClassname = $this->queryClassname;
 		$script .= "
 /**
@@ -831,7 +860,7 @@ public function getSiblings(\$includeNode = false, \$query = null, PropelPDO \$c
 	} else {
 		 \$query = $queryClassname::create(null, \$query)
 				->childrenOf(\$this->getParent(\$con))
-				->orderByBranch(true);
+				->orderByBranch();
 		if (!\$includeNode) {
 			\$query->prune(\$this);
 		}
@@ -844,7 +873,6 @@ public function getSiblings(\$includeNode = false, \$query = null, PropelPDO \$c
 	protected function addGetDescendants(&$script)
 	{
 		$objectClassname = $this->objectClassname;
-		$peerClassname = $this->peerClassname;
 		$queryClassname = $this->queryClassname;
 		$script .= "
 /**
@@ -871,7 +899,6 @@ public function getDescendants(\$query = null, PropelPDO \$con = null)
 	protected function addCountDescendants(&$script)
 	{
 		$objectClassname = $this->objectClassname;
-		$peerClassname = $this->peerClassname;
 		$queryClassname = $this->queryClassname;
 		$script .= "
 /**
@@ -898,7 +925,6 @@ public function countDescendants(\$query = null, PropelPDO \$con = null)
 	protected function addGetBranch(&$script)
 	{
 		$objectClassname = $this->objectClassname;
-		$peerClassname = $this->peerClassname;
 		$queryClassname = $this->queryClassname;
 		$script .= "
 /**
@@ -921,7 +947,6 @@ public function getBranch(\$query = null, PropelPDO \$con = null)
 	protected function addGetAncestors(&$script)
 	{
 		$objectClassname = $this->objectClassname;
-		$peerClassname = $this->peerClassname;
 		$queryClassname = $this->queryClassname;
 		$script .= "
 /**
@@ -950,7 +975,6 @@ public function getAncestors(\$query = null, PropelPDO \$con = null)
 	protected function addAddChild(&$script)
 	{
 		$objectClassname = $this->objectClassname;
-		$peerClassname = $this->peerClassname;
 		$useScope = $this->behavior->useScope();
 		$script .= "
 /**
@@ -973,10 +997,19 @@ public function addChild($objectClassname \$child)
 ";
 	}
 	
+	protected function getPeerClassNameWithNamespace()
+	{
+		$peerClassname = $this->peerClassname;
+		if ($namespace = $this->builder->getStubPeerBuilder()->getNamespace()) {
+			$peerClassname = '\\\\' . $namespace . '\\\\' . $peerClassname;
+		}
+		return $peerClassname;
+	}
+	
 	protected function addInsertAsFirstChildOf(&$script)
 	{
 		$objectClassname = $this->objectClassname;
-		$peerClassname = $this->peerClassname;
+		$peerClassname = $this->getPeerClassNameWithNamespace();
 		$useScope = $this->behavior->useScope();
 		$script .= "
 /**
@@ -1011,7 +1044,7 @@ public function insertAsFirstChildOf(\$parent)
 	// Keep the tree modification query for the save() transaction
 	\$this->nestedSetQueries []= array(
 		'callable'  => array('$peerClassname', 'makeRoomForLeaf'),
-		'arguments' => array(\$left" . ($useScope ? ", \$scope" : "") . ")
+		'arguments' => array(\$left" . ($useScope ? ", \$scope" : "") . ", \$this->isNew() ? null : \$this)
 	);
 	return \$this;
 }
@@ -1021,7 +1054,7 @@ public function insertAsFirstChildOf(\$parent)
 	protected function addInsertAsLastChildOf(&$script)
 	{
 		$objectClassname = $this->objectClassname;
-		$peerClassname = $this->peerClassname;
+		$peerClassname = $this->getPeerClassNameWithNamespace();
 		$useScope = $this->behavior->useScope();
 		$script .= "
 /**
@@ -1056,7 +1089,7 @@ public function insertAsLastChildOf(\$parent)
 	// Keep the tree modification query for the save() transaction
 	\$this->nestedSetQueries []= array(
 		'callable'  => array('$peerClassname', 'makeRoomForLeaf'),
-		'arguments' => array(\$left" . ($useScope ? ", \$scope" : "") . ")
+		'arguments' => array(\$left" . ($useScope ? ", \$scope" : "") . ", \$this->isNew() ? null : \$this)
 	);
 	return \$this;
 }
@@ -1066,7 +1099,7 @@ public function insertAsLastChildOf(\$parent)
 	protected function addInsertAsPrevSiblingOf(&$script)
 	{
 		$objectClassname = $this->objectClassname;
-		$peerClassname = $this->peerClassname;
+		$peerClassname = $this->getPeerClassNameWithNamespace();
 		$useScope = $this->behavior->useScope();
 		$script .= "
 /**
@@ -1098,7 +1131,7 @@ public function insertAsPrevSiblingOf(\$sibling)
 	// Keep the tree modification query for the save() transaction
 	\$this->nestedSetQueries []= array(
 		'callable'  => array('$peerClassname', 'makeRoomForLeaf'),
-		'arguments' => array(\$left" . ($useScope ? ", \$scope" : "") . ")
+		'arguments' => array(\$left" . ($useScope ? ", \$scope" : "") . ", \$this->isNew() ? null : \$this)
 	);
 	return \$this;
 }
@@ -1108,7 +1141,7 @@ public function insertAsPrevSiblingOf(\$sibling)
 	protected function addInsertAsNextSiblingOf(&$script)
 	{
 		$objectClassname = $this->objectClassname;
-		$peerClassname = $this->peerClassname;
+		$peerClassname = $this->getPeerClassNameWithNamespace();
 		$useScope = $this->behavior->useScope();
 		$script .= "
 /**
@@ -1140,7 +1173,7 @@ public function insertAsNextSiblingOf(\$sibling)
 	// Keep the tree modification query for the save() transaction
 	\$this->nestedSetQueries []= array(
 		'callable'  => array('$peerClassname', 'makeRoomForLeaf'),
-		'arguments' => array(\$left" . ($useScope ? ", \$scope" : "") . ")
+		'arguments' => array(\$left" . ($useScope ? ", \$scope" : "") . ", \$this->isNew() ? null : \$this)
 	);
 	return \$this;
 }
@@ -1150,7 +1183,6 @@ public function insertAsNextSiblingOf(\$sibling)
 	protected function addMoveToFirstChildOf(&$script)
 	{
 		$objectClassname = $this->objectClassname;
-		$peerClassname = $this->peerClassname;
 		$script .= "
 /**
  * Moves current node and its subtree to be the first child of \$parent
@@ -1187,7 +1219,6 @@ public function moveToFirstChildOf(\$parent, PropelPDO \$con = null)
 	protected function addMoveToLastChildOf(&$script)
 	{
 		$objectClassname = $this->objectClassname;
-		$peerClassname = $this->peerClassname;
 		$script .= "
 /**
  * Moves current node and its subtree to be the last child of \$parent
@@ -1224,7 +1255,6 @@ public function moveToLastChildOf(\$parent, PropelPDO \$con = null)
 	protected function addMoveToPrevSiblingOf(&$script)
 	{
 		$objectClassname = $this->objectClassname;
-		$peerClassname = $this->peerClassname;
 		$script .= "
 /**
  * Moves current node and its subtree to be the previous sibling of \$sibling
@@ -1264,7 +1294,6 @@ public function moveToPrevSiblingOf(\$sibling, PropelPDO \$con = null)
 	protected function addMoveToNextSiblingOf(&$script)
 	{
 		$objectClassname = $this->objectClassname;
-		$peerClassname = $this->peerClassname;
 		$script .= "
 /**
  * Moves current node and its subtree to be the next sibling of \$sibling
@@ -1352,7 +1381,7 @@ protected function moveSubtreeTo(\$destLeft, \$levelDelta, PropelPDO \$con = nul
 		$peerClassname::shiftRLValues(-\$treeSize, \$right + 1, null" . ($useScope ? ", \$scope" : "") . ", \$con);
 		
 		// update all loaded nodes
-		$peerClassname::updateLoadedNodes(\$con);
+		$peerClassname::updateLoadedNodes(null, \$con);
 		
 		\$con->commit();
 	} catch (PropelException \$e) {
@@ -1545,7 +1574,9 @@ public function retrieveLastChild(PropelPDO \$con = null)
  */
 public function getPath(PropelPDO \$con = null)
 {
-	return \$this->getAncestors(null, \$con);
+	\$path = \$this->getAncestors(null, \$con);
+	\$path []= \$this;
+	return \$path;
 }
 ";
 	}

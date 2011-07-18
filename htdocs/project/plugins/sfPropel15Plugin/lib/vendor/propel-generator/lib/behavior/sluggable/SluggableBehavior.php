@@ -13,7 +13,7 @@
  *
  * @author    Francois Zaninotto
  * @author    Massimiliano Arione
- * @version		$Revision: 1629 $
+ * @version		$Revision: 2090 $
  * @package		propel.generator.behavior.sluggable
  */
 class SluggableBehavior extends Behavior
@@ -41,7 +41,7 @@ class SluggableBehavior extends Behavior
 			));
 			// add a unique to column
 			$unique = new Unique($this->getColumnForParameter('slug_column'));
-			$unique->setName($this->getTable()->getName() . '_slug');
+			$unique->setName($this->getTable()->getCommonName() . '_slug');
 			$unique->addColumn($this->getTable()->getColumn($this->getParameter('slug_column')));
 			$this->getTable()->addUnique($unique);
 		}
@@ -74,7 +74,7 @@ class SluggableBehavior extends Behavior
 	 */
 	public function preSave($builder)
 	{
-    $const = $builder->getColumnConstant($this->getColumnForParameter('slug_column'), $this->getTable()->getPhpName() . 'Peer');
+		$const = $builder->getColumnConstant($this->getColumnForParameter('slug_column'));
 		$script = "
 if (\$this->isColumnModified($const) && \$this->{$this->getColumnGetter()}()) {
 	\$this->{$this->getColumnSetter()}(\$this->makeSlugUnique(\$this->{$this->getColumnGetter()}()));";

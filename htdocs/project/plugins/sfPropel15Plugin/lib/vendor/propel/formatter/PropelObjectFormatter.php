@@ -13,7 +13,7 @@
  * format() returns a PropelObjectCollection of Propel model objects
  *
  * @author     Francois Zaninotto
- * @version    $Revision: 1898 $
+ * @version    $Revision: 2146 $
  * @package    propel.runtime.formatter
  */
 class PropelObjectFormatter extends PropelFormatter
@@ -85,12 +85,17 @@ class PropelObjectFormatter extends PropelFormatter
 	{
 		// main object
 		list($obj, $col) = call_user_func(array($this->peer, 'populateObject'), $row);
+		
 		// related objects added using with()
 		foreach ($this->getWith() as $modelWith) {
 			list($endObject, $col) = call_user_func(array($modelWith->getModelPeerName(), 'populateObject'), $row, $col);
+			$startObject = $modelWith->isPrimary() ? $obj : $hydrationChain[$modelWith->getLeftPhpName()];
 			// as we may be in a left join, the endObject may be empty
 			// in which case it should not be related to the previous object
 			if (null === $endObject || $endObject->isPrimaryKeyNull()) {
+				if ($modelWith->isAdd()) {
+					call_user_func(array($startObject, $modelWith->getInitMethod()), false);
+				}
 				continue;
 			}
 			if (isset($hydrationChain)) {
@@ -99,9 +104,9 @@ class PropelObjectFormatter extends PropelFormatter
 				$hydrationChain = array($modelWith->getRightPhpName() => $endObject);
 			}
 			
-			$startObject = $modelWith->isPrimary() ? $obj : $hydrationChain[$modelWith->getLeftPhpName()];
 			call_user_func(array($startObject, $modelWith->getRelationMethod()), $endObject);
 		}
+		
 		// columns added using withColumn()
 		foreach ($this->getAsColumns() as $alias => $clause) {
 			$obj->setVirtualColumn($alias, $row[$col]);

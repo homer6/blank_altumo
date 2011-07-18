@@ -12,7 +12,7 @@
  * Abstract class for query formatter
  *
  * @author     Francois Zaninotto
- * @version    $Revision: 1796 $
+ * @version    $Revision: 2198 $
  * @package    propel.runtime.formatter
  */
 abstract class PropelFormatter
@@ -44,8 +44,7 @@ abstract class PropelFormatter
 	public function init(ModelCriteria $criteria)
 	{
 		$this->dbName = $criteria->getDbName();
-		$this->class = $criteria->getModelName();
-		$this->peer = $criteria->getModelPeerName();
+		$this->setClass($criteria->getModelName());
 		$this->setWith($criteria->getWith());
 		$this->asColumns = $criteria->getAsColumns();
 		$this->hasLimit = $criteria->getLimit() != 0;
@@ -68,6 +67,7 @@ abstract class PropelFormatter
 	public function setClass($class)
 	{
 		$this->class = $class;
+		$this->peer = constant($this->class . '::PEER');
 	}
 	
 	public function getClass()
@@ -87,10 +87,7 @@ abstract class PropelFormatter
 	
 	public function setWith($withs = array())
 	{
-		$this->with = array();
-		foreach ($withs as $relation => $join) {
-			$this->with[$relation] = new ModelWith($join);
-		}
+		$this->with = $withs;
 	}
 	
 	public function getWith()
@@ -151,7 +148,7 @@ abstract class PropelFormatter
 	protected function isWithOneToMany()
 	{
 		foreach ($this->with as $modelWith) {
-			if ($modelWith->isAdd()) {
+			if ($modelWith->isWithOneToMany()) {
 				return true;
 			}
 		}

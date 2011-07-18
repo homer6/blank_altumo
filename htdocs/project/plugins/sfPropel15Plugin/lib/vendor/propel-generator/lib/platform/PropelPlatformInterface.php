@@ -13,10 +13,10 @@
  *
  * @author     Hans Lellelid <hans@xmpl.org> (Propel)
  * @author     Martin Poeschl <mpoeschl@marmot.at> (Torque)
- * @version    $Revision: 1612 $
+ * @version    $Revision: 2281 $
  * @package    propel.generator.platform
  */
-interface Platform 
+interface PropelPlatformInterface
 {
 
 	/**
@@ -54,13 +54,6 @@ interface Platform
 	public function setGeneratorConfig(GeneratorConfig $config);
 
 	/**
-	 * Gets the GeneratorConfig object.
-	 *
-	 * @return     GeneratorConfig
-	 */
-	public function getGeneratorConfig();
-
-	/**
 	 * Returns the short name of the database type that this platform represents.
 	 * For example MysqlPlatform->getDatabaseType() returns 'mysql'.
 	 * @return     string
@@ -70,7 +63,7 @@ interface Platform
 	/**
 	 * Returns the native IdMethod (sequence|identity)
 	 *
-	 * @return     string The native IdMethod (Platform:IDENTITY, Platform::SEQUENCE).
+	 * @return     string The native IdMethod (PropelPlatformInterface:IDENTITY, PropelPlatformInterface::SEQUENCE).
 	 */
 	public function getNativeIdMethod();
 
@@ -100,6 +93,38 @@ interface Platform
 	 */
 	public function getAutoIncrement();
 
+	/**
+	 * Returns the DDL SQL for a Column object.
+	 * @return     string
+	 */
+	public function getColumnDDL(Column $col);
+
+	/**
+	 * Returns the SQL for the default value of a Column object.
+	 * @return     string
+	 */
+	public function getColumnDefaultValueDDL(Column $col);
+
+	/**
+	 * Creates a delimiter-delimited string list of column names, quoted using quoteIdentifier().
+	 * @example
+	 * <code>
+	 * echo $platform->getColumnListDDL(array('foo', 'bar');
+	 * // '"foo","bar"'
+	 * </code>
+	 * @param      array Column[] or string[]
+	 * @param      string $delim The delimiter to use in separating the column names.
+	 *
+	 * @return     string
+	 */
+	public function getColumnListDDL($columns, $delimiter = ',');
+
+	/**
+	 * Returns the SQL for the primary key of a Table object
+	 * @return     string
+	 */
+	public function getPrimaryKeyDDL(Table $table);
+	
 	/**
 	 * Returns if the RDBMS-specific SQL type has a size attribute.
 	 *
@@ -142,6 +167,12 @@ interface Platform
 	 */
 	public function supportsInsertNullPk();
 	
+	/**
+	 * Whether RDBMS supports native schemas for table layout.
+	 * @return boolean
+	 */
+	public function supportsSchemas();
+
 	/**
 	 * Returns the boolean value for the RDBMS.
 	 *

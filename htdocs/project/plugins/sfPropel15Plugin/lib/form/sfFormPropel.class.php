@@ -695,7 +695,7 @@ abstract class sfFormPropel extends sfFormObject
     {
       $formClass = $relatedClass . 'Form';
     }
-    $emptyForm = new $formClass($relatedObject);
+    $emptyForm = new $formClass($relatedObject, $options);
     if ($label = $options['empty_label'])
     {
       $emptyForm->getWidgetSchema()->setLabel($label);

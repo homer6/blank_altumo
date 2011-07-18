@@ -57,7 +57,7 @@ class SortableBehaviorQueryBuilderModifier
 		}
 		
 		// select termination methods
-		if ($this->getParameter('rank_column') != 'rank') {
+		if ($this->getParameter('rank_column') != 'rank' || $this->behavior->useScope()) {
 			$this->addFindOneByRank($script);
 		}
 		$this->addFindList($script);
@@ -77,7 +77,7 @@ class SortableBehaviorQueryBuilderModifier
  *
  * @param     int \$scope		Scope to determine which objects node to return
  *
- * @return    {$this->queryClassname} The current query, for fuid interface
+ * @return    {$this->queryClassname} The current query, for fluid interface
  */
 public function inList(\$scope = null)
 {
@@ -203,6 +203,7 @@ public function findList(" . ($useScope ? "\$scope = null, " : "") . "\$con = nu
 			
 	protected function addGetMaxRank(&$script)
 	{
+		$this->builder->declareClasses('Propel');
 		$useScope = $this->behavior->useScope();
 		$script .= "
 /**
@@ -238,6 +239,7 @@ public function getMaxRank(" . ($useScope ? "\$scope = null, " : "") . "PropelPD
 
 	protected function addReorder(&$script)
 	{
+		$this->builder->declareClasses('Propel');
 		$peerClassname = $this->peerClassname;
 		$columnGetter = 'get' . $this->behavior->getColumnForParameter('rank_column')->getPhpName();
 		$columnSetter = 'set' . $this->behavior->getColumnForParameter('rank_column')->getPhpName();

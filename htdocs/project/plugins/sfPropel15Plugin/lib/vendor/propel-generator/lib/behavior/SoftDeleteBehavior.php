@@ -14,7 +14,7 @@
  * And an additional condition for every read query to only consider rows with no deletion date
  *
  * @author     François Zaninotto
- * @version    $Revision: 1807 $
+ * @version    $Revision: 2169 $
  * @package    propel.generator.behavior
  */
 class SoftDeleteBehavior extends Behavior
@@ -82,15 +82,23 @@ public function unDelete(PropelPDO \$con = null)
 
 	public function preDelete($builder)
 	{
-		return <<<EOT
-if (!empty(\$ret) && {$builder->getStubQueryBuilder()->getClassname()}::isSoftDeleteEnabled()) {
+		$script = "if (!empty(\$ret) && {$builder->getStubQueryBuilder()->getClassname()}::isSoftDeleteEnabled()) {";
+
+		// prevent updated_at from changing when using a timestampable behavior
+		if ($this->getTable()->hasBehavior('timestampable')) {
+			$script .= "
+	\$this->keepUpdateDateUnchanged();";
+		}
+
+		$script .= "
 	\$this->{$this->getColumnSetter()}(time());
 	\$this->save(\$con);
 	\$con->commit();
 	{$builder->getStubPeerBuilder()->getClassname()}::removeInstanceFromPool(\$this);
 	return;
 }
-EOT;
+";
+		return $script;
 	}
 
 	public function queryAttributes()
@@ -125,7 +133,7 @@ protected \$localSoftDelete = true;
  * 
  * @see {$this->builder->getStubQueryBuilder()->getClassname()}::disableSoftDelete() to disable the filter for more than one query
  *
- * @return {$this->builder->getStubQueryBuilder()->getClassname()} The current query, for fuid interface
+ * @return {$this->builder->getStubQueryBuilder()->getClassname()} The current query, for fluid interface
  */
 public function includeDeleted()
 {

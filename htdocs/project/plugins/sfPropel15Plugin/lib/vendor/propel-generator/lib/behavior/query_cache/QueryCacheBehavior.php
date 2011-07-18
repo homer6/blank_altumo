@@ -12,7 +12,7 @@
  * Speeds up queries on a model by caching the query
  *
  * @author     François Zaninotto
- * @version    $Revision: 1746 $
+ * @version    $Revision: 2232 $
  * @package    propel.generator.behavior.cacheable
  */
 class QueryCacheBehavior extends Behavior
@@ -167,9 +167,11 @@ protected function getSelectStatement(\$con = null)
 		\$con = Propel::getConnection(" . $this->peerClassname ."::DATABASE_NAME, Propel::CONNECTION_READ);
 	}
 	
-	if (!\$this->hasSelectClause()) {
+	if (!\$this->hasSelectClause() && !\$this->getPrimaryCriteria()) {
 		\$this->addSelfSelectColumns();
 	}
+	
+	\$this->configureSelectColumns();
 	
 	\$con->beginTransaction();
 	try {
@@ -186,7 +188,7 @@ protected function getSelectStatement(\$con = null)
 			}
 		}
 		\$stmt = \$con->prepare(\$sql);
-		BasePeer::populateStmtValues(\$stmt, \$params, \$dbMap, \$db);
+		\$db->bindValues(\$stmt, \$params, \$dbMap);
 		\$stmt->execute();
 		\$con->commit();
 	} catch (PropelException \$e) {
@@ -222,17 +224,17 @@ protected function getCountStatement(\$con = null)
 				\$this->addSelfSelectColumns();
 			}
 			\$params = array();
-			\$needsComplexCount = \$this->getGroupByColumns() 
+			\$needsComplexCount = \$this->getGroupByColumns()
 				|| \$this->getOffset()
-				|| \$this->getLimit() 
-				|| \$this->getHaving() 
+				|| \$this->getLimit()
+				|| \$this->getHaving()
 				|| in_array(Criteria::DISTINCT, \$this->getSelectModifiers());
 			if (\$needsComplexCount) {
 				if (BasePeer::needsSelectAliases(\$this)) {
 					if (\$this->getHaving()) {
 						throw new PropelException('Propel cannot create a COUNT query when using HAVING and  duplicate column names in the SELECT part');
 					}
-					BasePeer::turnSelectColumnsToAliases(\$this);
+					\$db->turnSelectColumnsToAliases(\$this);
 				}
 				\$selectSql = BasePeer::createSelectSql(\$this, \$params);
 				\$sql = 'SELECT COUNT(*) FROM (' . \$selectSql . ') propelmatch4cnt';
@@ -246,7 +248,7 @@ protected function getCountStatement(\$con = null)
 			}
 		}
 		\$stmt = \$con->prepare(\$sql);
-		BasePeer::populateStmtValues(\$stmt, \$params, \$dbMap, \$db);
+		\$db->bindValues(\$stmt, \$params, \$dbMap);
 		\$stmt->execute();
 		\$con->commit();
 	} catch (PropelException \$e) {
