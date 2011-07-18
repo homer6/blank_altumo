@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- <database name="propel" defaultIdMethod="native" noXsd="true" package="lib.model">
+    
+    <table name="client">
+        <column name="id" type="INTEGER" primaryKey="true" autoIncrement="true" />
+        <column name="user_id" type="INTEGER" required="true" />
+        <column name="default_billing_contact_information_id" type="INTEGER" required="false" />
+        <column name="default_shipping_contact_information_id" type="INTEGER" required="false" />
+
+        <column name="created_at" type="timestamp" />
+        <column name="updated_at" type="timestamp" />
+
+
+        <foreign-key foreignTable="user" onDelete="cascade">
+            <reference local="user_id" foreign="id" />
+        </foreign-key>
+
+        <foreign-key foreignTable="contact_information" onDelete="cascade">
+            <reference local="default_billing_contact_information_id" foreign="id" />
+        </foreign-key>
+
+        <foreign-key foreignTable="contact_information" onDelete="cascade">
+            <reference local="default_shipping_contact_information_id" foreign="id" />
+        </foreign-key>
+
+    </table>
+</database> -->
