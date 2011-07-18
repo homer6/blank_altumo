@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- <database name="propel" defaultIdMethod="native" noXsd="true" package="lib.model">
-    
+<database name="propel" defaultIdMethod="native" noXsd="true" package="lib.model">
+<!--    
     <table name="client">
         <column name="id" type="INTEGER" primaryKey="true" autoIncrement="true" />
         <column name="user_id" type="INTEGER" required="true" />
@@ -24,4 +24,5 @@
         </foreign-key>
 
     </table>
-</database> -->
+-->
+</database>
