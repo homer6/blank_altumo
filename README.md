@@ -28,8 +28,10 @@ Installation
    - cd my-new-project-name
    - git submodule update --init --recursive
    - cd htdocs/project
-   - ./symfony altumo:git-hook-handler install
-   - ./symfony altumo:test-environment
+   - Run the install:
+     - usage: symfony altumo:install database-host database-user database-password database domain environment
+     - eg. ./symfony altumo:install localhost my_db_user my_db_password my_database my.dev.domain.com dev_ssperandeo
+     - Follow the instructions from the install script
 
 Testing
 ------------
