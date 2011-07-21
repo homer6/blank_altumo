@@ -1,16 +1,26 @@
 Quick and dirty, setting up a shared, central git repository for your team.
 
+While this is a solution, a much better one would be to use github. Their public 
+repositories are free and their private plans are really affordable and if you 
+absolutely need a private repository, they have a firewall install version: 
+http://fi.github.com/.
+
+However, the following is free to set up. It'll likely may take you a little 
+more time though.
+
 For the website: my-project-name.com
+For the company: my-company-name
 
 1. On your git server, git.my-company-name.com (the centralised repository)
-    #Create a neutral user and a bare repository 
+    #Create a neutral user (eg. central) and a bare repository 
         useradd -m central
         sudo su central -
+        mkdir -p /home/central/dev/my-company-name
         cd /home/central/dev/my-company-name
-        git clone --bare git@github.com:homer6/blank_altumo.git my-project-name.com.git
+        git clone --bare -o blank_altumo git://github.com/homer6/blank_altumo.git my-project-name.com.git
 
 2. On Each Environment (Each Developers's personal Dev, shared Testing, shared Staging and shared Production)
-    #Create a working tree for an environment
+    #Create a working directory for an environment
         git clone -o central ssh://central@git.my-company-name.com:22/home/central/dev/my-company-name/my-project-name.com.git
 
 3. Add each user's public key to the
