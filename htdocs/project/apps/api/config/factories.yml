@@ -40,3 +40,10 @@ all:
     param:
       cache_key_use_vary_headers: true
       cache_key_use_host_name:    true
+
+  response:
+    class: \sfAltumoPlugin\Api\ApiResponse
+
+  request:
+    class: \sfAltumoPlugin\Api\ApiRequest
+

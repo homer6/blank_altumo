@@ -1,13 +1,10 @@
 <?php
 
 /**
- * default actions.
- *
- * @package    blank
- * @subpackage default
- * @author     Your name here
- * @version    SVN: $Id: actions.class.php 23810 2009-11-12 11:07:44Z Kris.Wallsmith $
- */
+* default actions.
+*
+* @author Steve Sperandeo <steve.sperandeo@altumo.com>
+*/
 class defaultActions extends sfActions{
     
     /**
@@ -19,5 +16,6 @@ class defaultActions extends sfActions{
       
       
     }
+    
   
 }
