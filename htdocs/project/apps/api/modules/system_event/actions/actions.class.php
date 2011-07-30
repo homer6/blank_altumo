@@ -47,8 +47,8 @@ class system_eventActions extends sfActions{
             //throws exceptions and has appropriate user error messages in the 
             //exception message.
             $system_event_field_maps = array(
-                new ApiFieldMap( 'name', false ),
-                new ApiFieldMap( 'slug', false )
+                new \sfAltumoPlugin\Api\ApiFieldMap( 'name', false ),
+                new \sfAltumoPlugin\Api\ApiFieldMap( 'slug', false )
             );
         
 
