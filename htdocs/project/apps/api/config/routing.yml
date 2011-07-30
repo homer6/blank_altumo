@@ -7,3 +7,6 @@ homepage:
   url:   /api
   param: { module: default, action: index }
 
+homepage:
+  url:   /api/system-event
+  param: { module: system_event, action: index }

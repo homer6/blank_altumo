@@ -42,8 +42,8 @@ all:
       cache_key_use_host_name:    true
 
   response:
-    class: \sfAltumoPlugin\Api\ApiResponse
+    class: \\sfAltumoPlugin\\Api\\ApiResponse
 
   request:
-    class: \sfAltumoPlugin\Api\ApiRequest
+    class: \\sfAltumoPlugin\\Api\\ApiRequest
 

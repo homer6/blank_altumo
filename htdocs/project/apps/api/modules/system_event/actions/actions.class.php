@@ -14,7 +14,7 @@ class system_eventActions extends sfActions{
     * @param \sfAltumoPlugin\Api\ApiRequest $request
     */
     public function executeIndex( \sfAltumoPlugin\Api\ApiRequest $request ){
-    
+    //\Altumo\Utils\Debug::dump('hey');
         try{
         
             $response = $this->getResponse();
@@ -34,6 +34,9 @@ class system_eventActions extends sfActions{
             $modify_result = function( &$system_event, &$result ){
                 
                 $result['id'] = $system_event->getId();
+                $result['name'] = $system_event->getName();
+                $result['unique_key'] = $system_event->getUniqueKey();
+                $result['slug'] = $system_event->getSlug();
                 
             };
             
