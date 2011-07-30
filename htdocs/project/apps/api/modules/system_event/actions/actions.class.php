@@ -14,7 +14,7 @@ class system_eventActions extends sfActions{
     * @param \sfAltumoPlugin\Api\ApiRequest $request
     */
     public function executeIndex( \sfAltumoPlugin\Api\ApiRequest $request ){
-    //\Altumo\Utils\Debug::dump('hey');
+
         try{
         
             $response = $this->getResponse();
