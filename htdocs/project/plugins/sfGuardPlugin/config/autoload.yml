@@ -1,0 +1,12 @@
+autoload:
+  sfGuardPlugin_lib:
+    name:           sfGuardLib
+    path:           <?php echo realpath(dirname(__FILE__).'/../lib')."\n" ?>
+    recursive:      true
+    exclude:        [vendor]
+  sfGuardPlugin_modules:
+    name:           sfGuardModules
+    path:           <?php echo realpath(dirname(__FILE__).'/../modules')."\n" ?>
+    recursive:      true
+    exclude:        [vendor]
+
