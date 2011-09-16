@@ -1,3 +1,6 @@
 [submodule "htdocs/project/plugins/sfAltumoPlugin"]
 	path = htdocs/project/plugins/sfAltumoPlugin
 	url = git://github.com/homer6/sfAltumoPlugin.git
+[submodule "htdocs/project/plugins/sfPropelORMPlugin"]
+	path = htdocs/project/plugins/sfPropelORMPlugin
+	url = git://github.com/propelorm/sfPropelORMPlugin.git
