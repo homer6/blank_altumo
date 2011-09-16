@@ -9,7 +9,6 @@
 .bzr
 _darcs
 .git
-.gitignore
 .hg
 .monotone
 .svn
