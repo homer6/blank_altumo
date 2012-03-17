@@ -1,0 +1,286 @@
+{
+    "title" : "API",
+    "version" : "1.0",
+    "description" : [
+        {
+            "heading" : "General Usage Notes",
+            "notes" : [
+                "All API responses are JSON. However, we do support JSONP with the jsonp query parameter.",
+                "Content-type: application/json is returned for JSON and Content-Type: application/javascript is returned for JSONP.",
+                "All data is *NOT* htmlentities encoded. If you plan on outputing this data to the browser, please ensure that you htmlentities encode it.",
+                "Most methods support vectorized lists. Eg. /community/post/{ids} can be /community/post/128,129 This means that request will modify those community posts with the provided primary keys of 128 and 129.",
+                "The global max page size limit for returned results is 100 for a single request. That is, results can only be retrieved in batches of up to 100 each. Also, the limit for the number of public primary keys within vectorized lists is 100.",
+                "All unix timestamps are in UTC.",
+                "All hash values use the sha1 algorithm."
+            ]
+        }
+    ],
+    "templates" : {
+        "request" : {
+            "base" : {
+                "headers" : [
+                    {
+                        "name" : "Accept",
+                        "type" : "string",
+                        "description" : "The response content type that this client is able to accept.",
+                        "required" : true,
+                        "possible_values" : [
+                            "application/json",
+                            "application/javascript"
+                        ],
+                        "example" : "application/json"
+                    },
+                    {
+                        "name" : "Authorization",
+                        "type" : "string",
+                        "description" : "The API key used for authorization. This is not encoded. It is the literal key provided by the system. If a previous session is provided with the \"Cookie\" request header, the \"Authorization\" request header is not required.",
+                        "required" : false,
+                        "possible_values" : [
+                            "Any valid key provided by the system."
+                        ],
+                        "example" : "Basic XXXXXXXXXXXXXXXXXXXXXXXXX"
+                    },
+                    {
+                        "name" : "X-API-Version",
+                        "type" : "string",
+                        "description" : "The the system API Version number.",
+                        "required" : true,
+                        "possible_values" : [
+                            "1.0"
+                        ],
+                        "example" : "1.0"
+                    },
+                    {
+                        "name" : "Cookie",
+                        "type" : "string",
+                        "description" : "The session id. This is not required if the \"Authorization\" request header is provided.",
+                        "required" : false,
+                        "possible_values" : [
+                            "the system=[session_id]"
+                        ],
+                        "example" : "the system=080hka37ti1inl8jk1mddo46m2"
+                    }
+                ],
+                "parameters" : [
+					{
+						"name" : "jsonp",
+						"required" : false,
+						"type" : "string",
+						"description" : "The function name that the response will be wrapped in.",
+						"possible_values" : [
+							"Any Javascript Callable"
+						],
+						"example" : "parseJsonp"
+					},
+					{
+						"name" : "callback",
+						"type" : "string",
+						"description" : "Alias of \"jsonp\" for jQuery out-of-the-box support. Either will work.",
+						"required" : false,
+						"possible_values" : [
+							"Any Javascript Callable"
+						],
+						"example" : "handleResponse"
+					}
+                ],
+				"body_parts": [
+				]
+            },
+            "methods" : {
+                "GET" : {
+                    "headers" : [
+                    ],
+                    "parameters" : [
+                        {
+                            "name" : "page",
+                            "type" : "integer",
+                            "description" : "The current page number. Defaults to 1.",
+                            "required" : false,
+                            "possible_values" : [
+                                "Any integer > 0"
+                            ],
+                            "example" : "50"
+                        },
+                        {
+                            "name" : "page_size",
+                            "type" : "integer",
+                            "description" : "The number of results that will be returned per page. Defaults to 30.",
+                            "required" : false,
+                            "possible_values" : [
+                                "Any integer from 1 to 100"
+                            ],
+                            "example" : "50"
+                        }
+                    ],                    
+					"body_parts" : [
+                    ]
+                },
+                "POST" : {
+					"body_parts" : [
+                        {
+                            "name" : "remote_id",
+                            "type" : "string",
+                            "description" : "The primary key of the image on your system. This is used to report errors.",
+                            "required" : false,
+                            "possible_values" : [
+                                "Any integer > 0"
+                            ],
+                            "example" : "1"
+                        }
+                    ]
+                },
+                "PUT" : {
+					"body_parts" : [
+						{
+							"name" : "remote_id",
+							"type" : "string",
+							"description" : "The primary key of the image on your system. This is used to report errors.",
+							"required" : false,
+							"possible_values" : [
+								"Any integer > 0"
+							],
+							"example" : "1"
+						}
+					]
+                },
+                "DELETE" : {
+                }
+            }
+        },
+        "response" : {
+            "base" : {
+                "headers" : [
+                    {
+                        "name" : "Content-Type",
+                        "type" : "string",
+                        "description" : "The mime type of the response message body.",
+                        "guaranteed" : true,
+                        "possible_values" : [
+                            "application/json",
+                            "application/javascript"
+                        ],
+                        "example" : "application/json"
+                    },
+                    {
+                        "name" : "Content-Length",
+                        "type" : "integer",
+                        "description" : "The length of the response message body, in bytes.",
+                        "guaranteed" : true,
+                        "possible_values" : [
+                            "Any positive integer."
+                        ],
+                        "example" : "283"
+                    },
+                    {
+                        "name" : "Set-Cookie",
+                        "type" : "string",
+                        "description" : "The session cookie. Use this cookie to make subsequent requests (so that the Authorization request header is not required in subsequent requests).",
+                        "guaranteed" : false,
+                        "possible_values" : [
+                            "Any positive integer."
+                        ],
+                        "example" : "283"
+                    }
+                ],
+                "body_parts" : [
+                    {
+                        "name" : "errors",
+                        "type" : "array",
+                        "description" : "An array of error objects. Each error has an optional remote_id (null for general errors) and a message. This is an empty array if there are no errors.",
+                        "guaranteed" : true,
+                        "possible_values" : [
+                            "Array with zero or more error objects."
+                        ],
+                        "example" : [
+                            {
+                                "remote_id" : null,
+                                "message" : "Page requested was greater than the number of pages."
+                            },
+                            {
+                                "remote_id" : 483418,
+                                "message" : "Unrecognized image format."
+                            }
+                        ]
+                    }
+                ]
+            },
+            "methods" : {
+                "GET" : {                
+					"headers":[],
+                    "parameters": [
+                        {
+                            "name" : "page",
+                            "type" : "integer",
+                            "description" : "The current page number. Defaults to 1.",
+                            "required" : false,
+                            "possible_values" : [
+                                "Any integer > 0"
+                            ],
+                            "example" : "50"
+                        },
+                        {
+                            "name" : "page_size",
+                            "type" : "integer",
+                            "description" : "The number of results that will be returned per page. Defaults to 30.",
+                            "required" : false,
+                            "possible_values" : [
+                                "Any integer from 1 to 100"
+                            ],
+                            "example" : "50"
+                        }
+                    ],
+                    "body_parts" : [
+                        {
+                            "name" : "has_many_pages",
+                            "type" : "boolean",
+                            "description" : "Whether this query result has many pages.",
+                            "guaranteed" : true,
+                            "possible_values" : [
+                                true,
+                                false
+                            ],
+                            "example" : "true"
+                        },
+                        {
+                            "name" : "total_results",
+                            "type" : "integer",
+                            "description" : "The total number of results for this query (the sum of all pages).",
+                            "guaranteed" : true,
+                            "possible_values" : [
+                                "Any integer >= 0"
+                            ],
+                            "example" : "50"
+                        },
+                        {
+                            "name" : "page_size",
+                            "type" : "integer",
+                            "description" : "The number of results that have been returned per page. Defaults to 30.",
+                            "guaranteed" : true,
+                            "possible_values" : [
+                                "Any integer from 1 to 100"
+                            ],
+                            "example" : "50"
+                        },
+                        {
+                            "name" : "page",
+                            "type" : "integer",
+                            "description" : "The result's page number. This is the current page.",
+                            "guaranteed" : true,
+                            "possible_values" : [
+                                "Any integer > 0"
+                            ],
+                            "example" : "1"
+                        }
+                    ]
+                },
+                "POST" : {
+                },
+                "PUT" : {
+                },
+                "DELETE" : {
+                }
+            }
+        }
+    },
+    
+ 

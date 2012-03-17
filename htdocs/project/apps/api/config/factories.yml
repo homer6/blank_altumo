@@ -9,11 +9,6 @@ prod:
       loggers: ~
 
 test:
-  storage:
-    class: sfSessionTestStorage
-    param:
-      session_path: %SF_TEST_CACHE_DIR%/sessions
-
   response:
     class: sfWebResponse
     param:
@@ -45,5 +40,14 @@ all:
     class: \\sfAltumoPlugin\\Api\\ApiResponse
 
   request:
-    class: \\sfAltumoPlugin\\Api\\ApiRequest
+    class: ApiRequest
 
+  storage:
+    class: modelSessionStorage
+    param:
+      database: propel
+      db_table: session
+      db_id_col: session_key
+      db_data_col: data
+      db_time_col: time
+      session_name: altumoApi

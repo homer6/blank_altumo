@@ -1,115 +1,232 @@
 <?php
 
 /**
-* system_event actions.
-*
-* @author Steve Sperandeo <steve.sperandeo@altumo.com>
-*/
-class system_eventActions extends sfActions{
-    
+ * SystemEvent and SystemEventSUbscription actions.
+ *
+ * @package    reseller_platform
+ * @subpackage system_event
+ * @author     Your name here
+ * @version    SVN: $Id: actions.class.php 23810 2009-11-12 11:07:44Z Kris.Wallsmith $
+ */
+class system_eventActions extends ApiActions{
+
+	
     /**
-    * This method represents all four API methods (GET, POST, PUT and DELETE) 
-    * for SystemEvents.
-    *
-    * @param \sfAltumoPlugin\Api\ApiRequest $request
+    * API Action for api users to list events
+    * 
+    * @param ApiRequest $request
+    * 
+    * @return void
     */
-    public function executeIndex( \sfAltumoPlugin\Api\ApiRequest $request ){
+    public function executeSystemEvent( \sfAltumoPlugin\Api\ApiRequest $request ){
 
         try{
-        
+            
+        	/* @var $response \sfAltumoPlugin\Api\ApiResponse */
             $response = $this->getResponse();
-            //for code completion
-                if( 0 ) $response = new \sfAltumoPlugin\Api\ApiResponse();
-            
-            try{
-                //$request->authenticate();
-            }catch( wfException $e ){
-                $response->setStatusCode( '401' );
-                throw $e;
-            }
-            
-            //Common (to all API methods) function that is responsible for returning
-            //a custom, yet consistent result. For security, only fields that are 
-            //explicitly added to $result will be returned.
-            $modify_result = function( &$system_event, &$result ){
-                
-                $result['id'] = $system_event->getId();
-                $result['name'] = $system_event->getName();
-                $result['unique_key'] = $system_event->getUniqueKey();
-                $result['slug'] = $system_event->getSlug();
-                
-            };
-            
-            //the common query that will be used in all four methods
-            $query = SystemEventQuery::create();
 
+            // authenticate and return user
+        	$user = $this->assertAndRetrieveAuthenticatedUser( $request );
 
-            //The fields in the field maps represent the writable fields in the 
-            //model (and whether they're required).
-            //Make sure each of these fields have rhobust model validation that 
-            //throws exceptions and has appropriate user error messages in the 
-            //exception message.
-            $system_event_field_maps = array(
-                new \sfAltumoPlugin\Api\ApiFieldMap( 'name', false ),
-                new \sfAltumoPlugin\Api\ApiFieldMap( 'slug', false )
-            );
-        
+            //prepare the query            
+			$query = SystemEventQuery::create();
+
+			$query->addAscendingOrderByColumn( SystemEventPeer::UNIQUE_KEY );
+
+			// if ids set, filter for those
+			$ids_filter_value = $request->getParameter( 'ids' );
+			if ( ! empty( $ids_filter_value ) ) {
+				$query->filterByPrimaryKey(
+					\Altumo\Validation\Arrays::sanitizeCsvArrayPostitiveInteger( $ids_filter_value )
+				);
+			}
+
+            //make sure each of these fields have rhobust model validation that throws exceptions
+			$field_mappings = array(
+				//new \sfAltumoPlugin\Api\ApiFieldMap( 'order_status_id' )
+			);
+                
+            //do the before_save checks
+			$before_save = function( &$model, &$request_object, &$response, $remote_id, $update ){
+			};
 
             switch( $request->getMethod() ){
 
                 case sfWebRequest::GET:
-
-                        $response->setStatusCode( '200' );
-
-                        $api_get_query = new \sfAltumoPlugin\Api\ApiGetQuery( $request, $response, $query, 'system_events', $modify_result );
-
-                        //extract the primary keys from the request and add them to the query, if they exist and are valid
-                        try{
-                            $ids = \Altumo\Validation\Arrays::sanitizeCsvArrayPostitiveInteger( $request->getParameter('ids', '') );
-                            if( !empty( $ids ) ){
-                                $query->filterById($ids);
-                            }
-                        }catch( Exception $e ){}
-                                                
+                    $response->setStatusCode( '200' );
+                        
+                        $api_get_query = new \sfAltumoPlugin\Api\ApiGetQuery( $request, $response, $query, 'system_events', $this->getSystemEventResultModifier() );                        
                         $api_get_query->runQuery();
 
                     break;
-                
-                case sfWebRequest::POST:
-                
-                        //not supported
-                        $response->setStatusCode( '405' );
-                        
-                    break;
+
                     
-                case sfWebRequest::PUT:
-                
-                        //not supported
+                default:            
+                        //action not supported
                         $response->setStatusCode( '405' );
-
-                    break;
-
-                case sfWebRequest::DELETE:
-
-                        //not supported
-                        $response->setStatusCode( '405' );
-
-                    break;
-                    
-                default:
-                        //not supported
-                        $response->setStatusCode( '405' );
-
-            }
-            
+                }
+             
         }catch( Exception $e ){
             
             $response->addException( $e );
             
         }
         
-        return $response->respond();        
+        return $response->respond();
+    }
+    
+    
+    /**
+    * API Action for api users to crud event subscriptions
+    * 
+    * @param ApiRequest $request
+    * 
+    * @return void
+    */
+    public function executeSystemEventSubscription( \sfAltumoPlugin\Api\ApiRequest $request ){
+
+        try{
+            
+        	/* @var $response \sfAltumoPlugin\Api\ApiResponse() */
+            $response = $this->getResponse();
+
+            $user = $this->assertAndRetrieveAuthenticatedUser( $request );
+            
+            //prepare the query            
+            $query = SystemEventSubscriptionQuery::create()
+            	->joinSystemEvent();
+
+            // if ids set, filter for those
+            $ids_filter_value = $request->getParameter( 'ids' );
+            if ( ! empty( $ids_filter_value ) ) {
+            	$query->filterById(
+            		\Altumo\Validation\Arrays::sanitizeCsvArrayPostitiveInteger( $ids_filter_value )
+            	);
+            }
+                
+            //do before_save checks
+			$before_save = function( &$model, &$request_object, &$response, $remote_id, $update ){
+				if( !$model->getUser() ){
+					$current_user = sfContext::getInstance()->getUser()->getUser();
+					$model->setUser( $current_user );
+				}
+			};
+			
+			$plural = 'system_event_subscriptions';
+
+            switch( $request->getMethod() ){
+
+                    case sfWebRequest::GET: // select
+
+                    	$response->setStatusCode( '200' );
+                            
+						$api_get_query = new \sfAltumoPlugin\Api\ApiGetQuery( $request, $response, $query, $plural, $this->getSystemEventSubscriptionResultModifier() );
+						$api_get_query->runQuery();
+
+                        break;
+                        
+                    case sfWebRequest::POST: // insert            
+						
+                    	$response->setStatusCode( '200' );
+                            
+						$api_write_operation = new \sfAltumoPlugin\Api\ApiWriteOperation( $request, $response, $plural );
+						$api_write_operation->setFieldMaps( $this->getSystemEventSubscriptionFieldMappings() );
+						$api_write_operation->setUpdate( false );
+						$api_write_operation->setQuery( $query );
+						$api_write_operation->setModifyResult( $this->getSystemEventSubscriptionResultModifier() );
+						$api_write_operation->setBeforeSave( $before_save );
+                            
+						$api_write_operation->run();
+                            
+                        break;
+
+                    case sfWebRequest::PUT: // update
+                    
+						$response->setStatusCode( '200' );
+                            
+						$api_write_operation = new \sfAltumoPlugin\Api\ApiWriteOperation( $request, $response, $plural );
+						$api_write_operation->setFieldMaps($this->getSystemEventSubscriptionFieldMappings());
+						$api_write_operation->setUpdate( true );
+						$api_write_operation->setQuery($query);
+						$api_write_operation->setBeforeSave( $before_save );
+						$api_write_operation->setModifyResult( $this->getSystemEventSubscriptionResultModifier() );
+                            
+						$api_write_operation->run();
+
+                        break;
+                        
+                    case sfWebRequest::DELETE: // delete
+                    	
+						$response->setStatusCode( '200' );
+                            
+						$api_delete_operation = new \sfAltumoPlugin\Api\ApiDeleteOperation( $request, $response, $query );
+						$api_delete_operation->run();
+
+						break;
+                        
+					default: // action not supported
+
+						$response->setStatusCode( '405' );
+
+						break;
+                }
+             
+        }catch( Exception $e ){
+            
+            $response->addException( $e );
+            
+        }
         
+        return $response->respond();
+        
+
+    }
+    
+    
+    /**
+    * @return function
+    */
+    protected function getSystemEventSubscriptionResultModifier()
+    {
+    	return function( &$system_event_subscription, &$result ){
+    		$result['id'] = $system_event_subscription->getId();
+    		$result['system_event'] = $system_event_subscription->getSystemEvent()->getUniqueKey();
+    		$result['remote_url'] = $system_event_subscription->getRemoteUrl();
+    		$result['authorization_token'] = $system_event_subscription->getAuthorizationToken();
+    		$result['enabled'] = $system_event_subscription->getEnabled();
+    		$result['created_at'] = $system_event_subscription->getCreatedAt();
+    		$result['updated_at'] = $system_event_subscription->getUpdatedAt();
+    	};
+    }
+    
+    
+    /**
+    * @return function
+    */
+    protected function getSystemEventResultModifier()
+    {
+    	return function( &$system_event, &$result ){
+    
+    		$result['id'] = $system_event->getId();
+    		$result['name'] = $system_event->getName();
+    		$result['unique_key'] = $system_event->getUniqueKey();
+    		//$result['slug'] = $system_event->getSlug();
+    		$result['enabled'] = $system_event->getEnabled();
+    	};
+    }
+    
+    
+    /**
+    * @return \sfAltumoPlugin\Api\ApiFieldMap[]
+    */
+    protected function getSystemEventSubscriptionFieldMappings()
+    {
+    	return array(
+    	new \sfAltumoPlugin\Api\ApiFieldMap( 'system_event', \sfAltumoPlugin\Api\ApiFieldMap::FLAG_REQUIRED, null, 'SystemEventUniqueKey' ),
+    	new \sfAltumoPlugin\Api\ApiFieldMap( 'remote_url', \sfAltumoPlugin\Api\ApiFieldMap::FLAG_REQUIRED, 'Remote URL' ),
+    	new \sfAltumoPlugin\Api\ApiFieldMap( 'authorization_token', \sfAltumoPlugin\Api\ApiFieldMap::FLAG_REQUIRED, 'Remote Authorization Token' ),
+    	new \sfAltumoPlugin\Api\ApiFieldMap( 'enabled' )
+    	);
     }
     
 }

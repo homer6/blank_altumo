@@ -14,6 +14,14 @@ dev:
     no_script_name:         false
     etag:                   false
 
+dev:
+  .settings:
+    error_reporting:        <?php echo (E_ALL | E_STRICT)."\n" ?>
+    web_debug:              false
+    cache:                  false
+    no_script_name:         false
+    etag:                   false
+
 test:
   .settings:
     error_reporting:        <?php echo ((E_ALL | E_STRICT) ^ E_NOTICE)."\n" ?>
@@ -25,7 +33,7 @@ test:
 all:
   .settings:
     # Form security secret (CSRF protection)
-    csrf_secret:            568ea2145d988b6ac591e0d4c43cae7adf401f90
+    csrf_secret:            bi7BYgb76VTn3hU9kniljhb7n6bv7j67Vpz04Ctc45
 
     # Output escaping settings
     escaping_strategy:      true
@@ -33,3 +41,14 @@ all:
 
     # Enable the database manager
     use_database:           true
+    enabled_modules:        [ sfAltumoPlugin_api_documentation ]
+
+  api:
+    documentation_username: api
+    documentation_password: password
+
+  sfAltumoPlugin:
+    aws:
+      enable: false
+      key: "MY_AWS_KE_HERE"
+      secret: "MY_AWS_SECRET_HERE" 

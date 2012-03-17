@@ -1,0 +1,109 @@
+        
+        
+        "system_event": {
+            "name": "System Event",
+            "plural_name": "",
+            "definition": "A System Event is an event that happens on the system. When an event fires, the subscribers for the events can be sent the event via an HTTPS call. Please use System Event Subcriptions to listen for System Events.",
+            "methods" : [
+                {
+                    "http_method" : "GET",
+                    "route" : "/api/system-event/{ids}",
+                    "description" : "Gets many System Events",
+                    "request" : {
+                        "headers" : [
+                        ],
+                        "parameters" : [
+                        ]
+                    },
+                    "response" : {
+                        "headers" : [
+                        ],
+                        
+                        "body_parts": [
+                            {
+                                "name" : "id",
+                                "type" : "integer",
+                                "description" : "Primary Key of this SystemEvent.",
+                                "guaranteed" : true,
+                                "possible_values" : [
+                                    "Any positive integer"
+                                ],
+                                "example" : 257
+                            },
+                            {
+                                "name" : "name",
+                                "type" : "string",
+                                "description" : "A description of the event.",
+                                "guaranteed" : true,
+                                "possible_values" : [
+                                    "Any non-empty string"
+                                ],
+                                "example" : "Visitor Or Buyer submitted a support message"
+                            },
+                            {
+                                "name" : "unique_key",
+                                "type" : "string",
+                                "description" : "The unique key for this field. This won't change and can be used in your source code.",
+                                "guaranteed" : true,
+                                "possible_values" : [
+                                    "Any non-empty string"
+                                ],
+                                "example" : "visitor_or_buyer_submitted_a_support_message"
+                            },
+                            {
+                                "name" : "enabled",
+                                "type" : "boolean",
+                                "description" : "Whether this SystemEvent is active.",
+                                "guaranteed" : true,
+                                "possible_values" : [
+                                    "true", "false", 1, 0
+                                ],
+                                "example" : "true"
+                            }
+                        ],
+                        
+                        "status" : [
+                            200,
+                            401,
+                            403
+                        ]
+                    },
+                    "examples" : [
+                        {
+                            "description" : "Get all SystemEvents.",
+                            "request" : [
+                                "GET /api/system-event/ HTTP/1.1",
+                                "Host: mygreatshapetoday.com",
+                                "Authorization: Basic XXXXXXXXXXXXXXXXXXXXXXXXX",
+                                "Accept: application/json",
+                                "X-API-Version: 1.0"
+                            ],
+                            "response_headers" : [
+                                "keep-alive: timeout=15, max=100",
+                                "content-type: application/json",
+                                "server: Apache/2.2.14 (Ubuntu)",
+                                "content-length: 203",
+                                "connection: Keep-Alive",
+                                "x-powered-by: PHP/5.3.2-1ubuntu4.7",
+                                "date: Wed, 20 Apr 2011 20:27:58 GMT"
+                            ],
+                            "response_body" : {
+                             "has_many_pages": false,
+                             "total_results": 1,
+                             "page_size": 30,
+                             "page": 1,
+                             "system_events": [
+                              {
+                               "id": 15,
+                               "name": "Buyer places order at store",
+                               "unique_key": "buyer_placed_new_order",
+                               "enabled": 1
+                              }
+                             ],
+                             "errors": []
+                            }
+                        }
+                    ]
+                }
+            ]
+        }

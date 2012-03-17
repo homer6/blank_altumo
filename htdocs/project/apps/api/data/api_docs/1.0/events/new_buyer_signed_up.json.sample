@@ -1,0 +1,155 @@
+		
+            
+		"new_buyer_signed_up": {
+			"name": "New Buyer signed up",
+			"description":"Fires when a new Buyer signs up",
+			"unique_key": "new_buyer_signed_up",
+			"slug": "new-buyer-signed-up",
+			"callback": {
+				"body_parts": [
+					{
+						"name" : "distributor_id",
+						"description" : "The primary key of the Distributor under whom this Buyer signed up.",
+						"type" : "integer",
+						"guaranteed" : true,
+						"possible_values" : [
+							"Any integer > 0"
+						],
+						"example" : "1023"
+					},
+					{
+						"name" : "user_id",
+						"description" : "The primary key of the user in the system.",
+						"type" : "integer",
+						"guaranteed" : true,
+						"possible_values" : [
+							"Any integer > 0"
+						],
+						"example" : "1023"
+					},
+					{
+						"name" : "full_name",
+						"description" : "Full name of the Buyer.",
+						"type" : "string",
+						"guaranteed" : false,
+						"possible_values" : [
+							"Any string up to 64 characters"
+						],
+						"example" : "Sally Smith"
+					},					
+					{
+						"name" : "email_address",
+						"description" : "Email address of the Buyer.",
+						"type" : "string",
+						"guaranteed" : false,
+						"possible_values" : [
+							"Any valid email address"
+						],
+						"example" : "sally.smith@example.com"
+					},
+					{
+						"name" : "phone_main_number",
+						"description" : "Main phone number of the Buyer.",
+						"type" : "string",
+						"guaranteed" : false,
+						"possible_values" : [
+							"Any string up to 32 characters"
+						],
+						"example" : "6045554422"
+					},
+					{
+						"name" : "phone_other_number",
+						"description" : "Secondary phone number of the Buyer.",
+						"type" : "string",
+						"guaranteed" : false,
+						"possible_values" : [
+							"Any string up to 32 characters"
+						],
+						"example" : "6045554433"
+					},
+					{
+						"name" : "mailing_address",
+						"description" : "Mailing Address of the Buyer.",
+						"type" : "string",
+						"guaranteed" : false,
+						"possible_values" : [
+							"Any string up to 255 characters"
+						],
+						"example" : "#141 4115 Main Road"
+					},
+					{
+						"name" : "city",
+						"description" : "City of the Buyer.",
+						"type" : "string",
+						"guaranteed" : false,
+						"possible_values" : [
+							"Any string up to 64 characters"
+						],
+						"example" : "White Rock"
+					},
+					{
+						"name" : "state",
+						"description" : "State of the Buyer.",
+						"type" : "string",
+						"guaranteed" : false,
+						"possible_values" : [
+							"A valid US State or Canadian Province name"
+						],
+						"example" : "British Columbia"
+					},					
+					{
+						"name" : "country",
+						"description" : "Country of the Buyer.",
+						"type" : "string",
+						"guaranteed" : true,
+						"possible_values" : [
+							"United States",
+							"Canada"
+						],
+						"example" : "Canada"
+					},
+					{
+						"name" : "zip_code",
+						"description" : "Zip code of the Buyer.",
+						"type" : "string",
+						"guaranteed" : false,
+						"possible_values" : [
+							"A valid US zip code or Canadian postal code"
+						],
+						"example" : "V5J2K9"
+					}
+				],
+				"examples": [
+					 {
+						"description" : "New Buyer Sally Smith has signed up.",
+						
+						"request": [
+							"POST https://remote.system.example.com/notify/newBuyerSignup",
+							"HTTP/1.1 Host: remote.system.example.com",
+							"Accept: application/json"
+						],
+						
+						"request_body" : {
+							"distributor_id":100,
+							"user_id":1213,
+							"full_name":"Sally Smith",
+							"email_address":"sally.smith@example.com",
+							"phone_main_number":"6041234567",
+							"phone_other_number":"6042345678",
+							"mailing_address":"#311 25122 Fifth Grande Rd",
+							"city":"White Rock",
+							"state":"British Columbia",
+							"country":"Canada",
+							"zip_code":"V4J3D3"
+						}
+						,
+						
+						"response_headers":[
+						],
+						
+						"response_body" : [
+						]
+					}
+				]
+			}
+		}

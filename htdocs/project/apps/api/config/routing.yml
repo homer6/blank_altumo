@@ -1,12 +1,57 @@
 # You can find more information about this file on the symfony website:
 # http://www.symfony-project.org/reference/1_4/en/10-Routing
 
+##########################################################################
+# Documentation
+##########################################################################
 
+api_documentation:
+  url: /api/1.0/documentation
+  param: { module: sfAltumoPlugin_api_documentation, action: viewDocumentation, api_version: '1.0' }
+
+api_docs:
+  url: /api/1.0/docs
+  param: { module: sfAltumoPlugin_api_documentation, action: viewDocumentation, api_version: '1.0' }
+
+api_documentation_data:
+  url: /api/1.0/documentation.json
+  param: { module: sfAltumoPlugin_api_documentation, action: getDocumentationData, api_version: '1.0' }
+
+api_documentation_data_version:
+  url: /api/:api_version/documentation.json
+  param: { module: sfAltumoPlugin_api_documentation, action: getDocumentationData }
+
+
+##########################################################################
+# System Event
+##########################################################################
+
+api_system_event_ids:
+  url:   /api/system-event/:ids
+  param: { module: system_event, action: SystemEvent }
+
+api_system_event:
+  url:   /api/system-event
+  param: { module: system_event, action: SystemEvent }
+
+
+##########################################################################
+# System Event Subscription
+##########################################################################
+  
+api_system_event_subscription_ids:
+  url:   /api/system-event-subscription/:ids
+  param: { module: system_event, action: SystemEventSubscription }
+
+api_system_event_subscription:
+  url:   /api/system-event-subscription
+  param: { module: system_event, action: SystemEventSubscription }
+
+
+##########################################################################
+# Defaults
+##########################################################################
 
 homepage:
   url:   /api
   param: { module: default, action: index }
-
-homepage:
-  url:   /api/system-event
-  param: { module: system_event, action: index }

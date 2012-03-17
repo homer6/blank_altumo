@@ -1,0 +1,512 @@
+		
+		
+		"system_event_subscription": {
+            "name": "System Event Subscription",
+            "plural_name": "A subscription to receive an HTTPS notifications when a System Event fires.",
+            "definition": "A system event is a event that occurs on the system. Each time a system event occurs, all of the subscribers to that event are notified via API calls. A System Event Subscription is a single subscription on a single API User to a single System Event.",
+            "methods" : [
+                {
+                    "http_method" : "GET",
+                    "route" : "/api/system-event-subscription/{ids}",
+                    "description" : "Gets many System Event Subscriptions",
+                    "request" : {
+                        "headers" : [
+                        ],
+                        "parameters" : [
+                        ]
+                    },
+                    "response" : {
+                        "headers" : [
+                        ],
+                        
+                        "body_parts": [
+                            {
+                                "name" : "id",
+                                "type" : "integer",
+                                "description" : "Primary Key of this SystemEventSubscription.",
+                                "required" : true,
+                                "possible_values" : [
+                                    "Any positive integer"
+                                ],
+                                "example" : 257
+                            },
+                            {
+                                "name" : "system_event",
+                                "type" : "string",
+                                "description" : "Unique Key of the System Event.",
+                                "required" : true,
+                                "possible_values" : [
+                                    "Any valid unique key of an existing SystemEvent"
+                                ],
+                                "example" : "buyer_placed_new_order"
+                            },
+                            {
+                                "name" : "remote_url",
+                                "type" : "string",
+                                "description" : "The URL that will be called when the event fires.",
+                                "required" : true,
+                                "possible_values" : [
+                                    "Any valid https url"
+                                ],
+                                "example" : "https://www.mydomain.com/handle-remote-event"
+                            },
+                            {
+                                "name" : "authorization_token",
+                                "type" : "string",
+                                "description" : "A string that will be passed back to your API in the 'X-Authorization-Token' HTTP header. This is used for authenticate so people can't hit your event listeners without authentication.",
+                                "required" : true,
+                                "possible_values" : [
+                                    "Any string from 10 - 255 characters."
+                                ],
+                                "example" : "c799a682a820d276e45cc809d156c084b0ac18df"
+                            },
+                            {
+                                "name" : "enabled",
+                                "type" : "boolean",
+                                "description" : "Whether this SystemEventSubscription is active.",
+                                "required" : true,
+                                "possible_values" : [
+                                    "true", "false", 1, 0
+                                ],
+                                "example" : "true"
+                            },
+                            {
+                                "name" : "created_at",
+                                "type" : "date",
+                                "description" : "When this SystemEventSubscription was created",
+                                "required" : true,
+                                "possible_values" : [
+                                    "A datetime value"
+                                ],
+                                "example" : "2011-01-22 15:00:00"
+                            },
+                            {
+                                "name" : "updated_at",
+                                "type" : "date",
+                                "description" : "When this SystemEventSubscription was last updated",
+                                "required" : false,
+                                "possible_values" : [
+                                    "A datetime value"
+                                ],
+                                "example" : "2011-02-21 12:08:13"
+                            }
+                        ],
+                        
+                        "status" : [
+                            200,
+                            401,
+                            403
+                        ]
+                    },
+                    "examples" : [
+                        {
+                            "description" : "Get all SystemEventSubscriptions.",
+                            "request" : [
+                                "GET /api/system-event-subscription/ HTTP/1.1",
+                                "Host: mygreatshapetoday.com",
+                                "Authorization: Basic XXXXXXXXXXXXXXXXXXXXXXXXX",
+                                "Accept: application/json",
+                                "X-API-Version: 1.0"
+                            ],
+                            "response_headers" : [
+                                "keep-alive: timeout=15, max=100",
+                                "content-type: application/json",
+                                "server: Apache/2.2.14 (Ubuntu)",
+                                "content-length: 203",
+                                "connection: Keep-Alive",
+                                "x-powered-by: PHP/5.3.2-1ubuntu4.7",
+                                "date: Wed, 20 Apr 2011 20:27:58 GMT"
+                            ],
+                            "response_body" : {
+                             "has_many_pages": false,
+                             "total_results": 1,
+                             "page_size": 30,
+                             "page": 1,
+                             "system_event_subscription": [
+                              {
+                               "id": 15,
+                               "system_event": "buyer_placed_new_order",
+                               "remote_url": "https://www.mydomain.com/handle-remote-event",
+                               "enabled": 1,
+                               "created_at": "2011-02-21 12:08:13",
+                               "updated_at": "2011-02-21 12:08:13"
+                              }
+                             ],
+                             "errors": []
+                            }
+                        }
+                    ]
+                },
+                {
+                    "http_method" : "POST",
+                    "route" : "/api/system-event-subscription/",
+                    "description" : "Creates System Event Subscriptions",
+                    "request" : {
+                        "headers" : [
+                        ],
+                        "parameters" : [
+                        ],
+                        "body_parts": [
+                            {
+                                "name" : "id",
+                                "type" : "integer",
+                                "description" : "Primary Key of this SystemEventSubscription.",
+                                "required" : true,
+                                "possible_values" : [
+                                    "Any positive integer"
+                                ],
+                                "example" : 257
+                            },
+                            {
+                                "name" : "system_event",
+                                "type" : "string",
+                                "description" : "Unique Key of the System Event.",
+                                "required" : true,
+                                "possible_values" : [
+                                    "Any valid unique key of an existing SystemEvent"
+                                ],
+                                "example" : "buyer_placed_new_order"
+                            },
+                            {
+                                "name" : "remote_url",
+                                "type" : "string",
+                                "description" : "The URL that will be called when the event fires.",
+                                "required" : true,
+                                "possible_values" : [
+                                    "Any valid https url"
+                                ],
+                                "example" : "https://www.mydomain.com/handle-remote-event"
+                            },
+                            {
+                                "name" : "authorization_token",
+                                "type" : "string",
+                                "description" : "A string that will be passed back to your API in the 'X-Authorization-Token' HTTP header. This is used for authenticate so people can't hit your event listeners without authentication.",
+                                "required" : true,
+                                "possible_values" : [
+                                    "Any string from 10 - 255 characters."
+                                ],
+                                "example" : "c799a682a820d276e45cc809d156c084b0ac18df"
+                            },
+                            {
+                                "name" : "enabled",
+                                "type" : "boolean",
+                                "description" : "Whether this SystemEventSubscription is active.",
+                                "required" : true,
+                                "possible_values" : [
+                                    "true", "false", 1, 0
+                                ],
+                                "example" : "true"
+                            },
+                            {
+                                "name" : "created_at",
+                                "type" : "date",
+                                "description" : "When this SystemEventSubscription was created",
+                                "required" : true,
+                                "possible_values" : [
+                                    "A datetime value"
+                                ],
+                                "example" : "2011-01-22 15:00:00"
+                            },
+                            {
+                                "name" : "updated_at",
+                                "type" : "date",
+                                "description" : "When this SystemEventSubscription was last updated",
+                                "required" : false,
+                                "possible_values" : [
+                                    "A datetime value"
+                                ],
+                                "example" : "2011-02-21 12:08:13"
+                            }
+                        ]
+                    },
+                    "response" : {
+                        "headers" : [
+                        ],
+                        "body_parts" : [                            
+                        ],
+                        "status" : [
+                            200,
+                            401,
+                            403
+                        ]
+                    },
+                                            
+                    "examples" : [
+                        {
+                            "description" : "Create 2 new System Event Subscriptions",
+                            
+                            "request": [
+                                "POST /api/system-event-subscription",
+                                "HTTP/1.1 Host: mygreatshapetoday.com",
+                                "Authorization: Basic XXXXXXXXXXXXXXXXXXXXXXXXX",
+                                "Accept: application/json",
+                                "X-API-Version: 1.0"
+                            ],                            
+                            
+                            "request_body": [
+                                {
+                                    "system_event":"buyer_placed_new_order",
+                                    "remote_url":"https://www.mydomain.com/handle-remote-event/buyer-placed-new-order"
+                                },{
+                                    "system_event":"visitor_or_buyer_submitted_a_support_message",
+                                    "remote_url":"https://www.mydomain.com/handle-remote-event/visitor-or-buyer-submitted-a-support-message",
+                                    "enabled":1
+                                }
+                            ],
+                            
+                            "response_headers":[
+                                "keep-alive: timeout=15, max=99",
+                                "content-type: application/json",
+                                "server: Apache/2.2.14 (Ubuntu)",
+                                "content-length: 343",
+                                "connection: Keep-Alive",
+                                "x-powered-by: PHP/5.3.2-1ubuntu4.7",
+                                "date: Wed, 20 Apr 2011 21:39:30 GMT"
+                            ],
+                            
+                            "response_body" : {
+                                 "system_event_subscriptions": [
+                                     {
+                                      "id": 42,
+                                      "system_event":"buyer_placed_new_order",
+                                      "remote_url":"https://www.mydomain.com/handle-remote-event/buyer-placed-new-order",
+                                      "enabled":1,
+                                      "created_at": "2011-04-20 14:39:31",
+                                      "updated_at": "2011-04-20 14:39:31"
+                                     },
+                                     {
+                                      "id": 43,
+                                      "system_event":"visitor_or_buyer_submitted_a_support_message",
+                                      "remote_url":"https://www.mydomain.com/handle-remote-event/visitor-or-buyer-submitted-a-support-message",
+                                      "enabled":1,
+                                      "created_at": "2011-04-20 14:39:31",
+                                      "updated_at": "2011-04-20 14:39:31"
+                                     }
+                                 ],
+                                 "errors": []
+                            }
+                        }
+                    ]
+                },
+                {
+                    "http_method" : "PUT",
+                    "route" : "/api/system-event-subscription/{ids}",
+                    "description" : "Modifies certain parameters of a Coupon for a Distributor Store.",
+                    "request" : {
+                        "headers" : [
+                        ],
+                        "parameters" : [
+                            {
+                                "name" : "distributor_store_id",
+                                "type" : "integer",
+                                "description" : "The primary key of a Distributor Store.",
+                                "required" : true,
+                                "possible_values" : [
+                                    "Any valid distributor store primary key."
+                                ],
+                                "example" : "4568"
+                            }
+                        ],
+                        "body_parts": [
+                            {
+                                "name" : "id",
+                                "type" : "integer",
+                                "description" : "Primary Key of this SystemEventSubscription.",
+                                "required" : true,
+                                "possible_values" : [
+                                    "Any positive integer"
+                                ],
+                                "example" : 257
+                            },
+                            {
+                                "name" : "system_event",
+                                "type" : "string",
+                                "description" : "Unique Key of the System Event.",
+                                "required" : true,
+                                "possible_values" : [
+                                    "Any valid unique key of an existing SystemEvent"
+                                ],
+                                "example" : "buyer_placed_new_order"
+                            },
+                            {
+                                "name" : "remote_url",
+                                "type" : "string",
+                                "description" : "The URL that will be called when the event fires.",
+                                "required" : true,
+                                "possible_values" : [
+                                    "Any valid https url"
+                                ],
+                                "example" : "https://www.mydomain.com/handle-remote-event"
+                            },
+                            {
+                                "name" : "authorization_token",
+                                "type" : "string",
+                                "description" : "A string that will be passed back to your API in the 'X-Authorization-Token' HTTP header. This is used for authenticate so people can't hit your event listeners without authentication.",
+                                "required" : true,
+                                "possible_values" : [
+                                    "Any string from 10 - 255 characters."
+                                ],
+                                "example" : "c799a682a820d276e45cc809d156c084b0ac18df"
+                            },
+                            {
+                                "name" : "enabled",
+                                "type" : "boolean",
+                                "description" : "Whether this SystemEventSubscription is active.",
+                                "required" : true,
+                                "possible_values" : [
+                                    "true", "false", 1, 0
+                                ],
+                                "example" : "true"
+                            },
+                            {
+                                "name" : "created_at",
+                                "type" : "date",
+                                "description" : "When this SystemEventSubscription was created",
+                                "required" : true,
+                                "possible_values" : [
+                                    "A datetime value"
+                                ],
+                                "example" : "2011-01-22 15:00:00"
+                            },
+                            {
+                                "name" : "updated_at",
+                                "type" : "date",
+                                "description" : "When this SystemEventSubscription was last updated",
+                                "required" : false,
+                                "possible_values" : [
+                                    "A datetime value"
+                                ],
+                                "example" : "2011-02-21 12:08:13"
+                            }   
+    
+                        ]
+                    },
+                    "response" : {
+                        "headers" : [
+                        ],
+                        "body_parts" : [                            
+                        ],
+                        "status" : [
+                            200,
+                            401,
+                            403
+                        ]
+                    },
+                                            
+                    "examples" : [
+                        {
+                            "description" : "Modifies the cents_amount of an existing coupon.",
+                            
+                            "request": [
+                                "PUT /api/system-event-subscription/30",
+                                "HTTP/1.1 Host: mygreatshapetoday.com",
+                                "Authorization: Basic XXXXXXXXXXXXXXXXXXXXXXXXX",
+                                "Accept: application/json",
+                                "X-API-Version: 1.0"
+                            ],
+                            
+                            "request_body": {
+                                "cents_amount": 1000,
+                            },
+                            
+                            "response_headers":[
+                                 "keep-alive: timeout=15, max=99",
+                                 "content-type: application/json",
+                                 "server: Apache/2.2.14 (Ubuntu)",
+                                 "content-length: 13",
+                                 "connection: Keep-Alive",
+                                 "x-powered-by: PHP/5.3.2-1ubuntu4.7",
+                                 "date: Mon, 18 Apr 2011 18:07:56 GMT"
+                            ],
+                            
+                            "response_body" : {
+                                 "system_event_subscriptions": [
+                                     {
+                                      "id": 42,
+                                      "system_event":"buyer_placed_new_order",
+                                      "remote_url":"https://www.mydomain.com/handle-remote-event/buyer-placed-new-order",
+                                      "enabled":1,
+                                      "created_at": "2011-04-20 14:39:31",
+                                      "updated_at": "2011-04-20 14:39:31"
+                                     },
+                                     {
+                                      "id": 43,
+                                      "system_event":"visitor_or_buyer_submitted_a_support_message",
+                                      "remote_url":"https://www.mydomain.com/handle-remote-event/visitor-or-buyer-submitted-a-support-message",
+                                      "enabled":1,
+                                      "created_at": "2011-04-20 14:39:31",
+                                      "updated_at": "2011-04-20 14:39:31"
+                                     }
+                                 ],
+                                 "errors": []
+                            }
+                        }
+                    ]
+                },
+                {
+                    "http_method" : "DELETE",
+                    "route" : "/api/system-event-subscription/{ids}",
+                    "description" : "Deletes Coupons from a Distributor Store",
+                    "request" : {
+                        "headers" : [
+                        ],
+                        "parameters" : [
+                        ],
+                        "body_parts": [
+                        ]
+                    },
+                    "response" : {
+                        "headers" : [
+                        ],
+                        "body_parts" : [
+                            {
+                                "name" : "deleted",
+                                "type" : "array",
+                                "description" : "The SystemEventSubscription ids that were deleted successfully.",
+                                "guaranteed" : true,
+                                "possible_values" : [
+                                    "Array of Coupon primary keys."
+                                ],
+                                "example" : "[2,3,7]"
+                            }
+                        ],
+                        "status" : [
+                            200,
+                            401,
+                            403
+                        ]
+                    },
+                                            
+                    "examples" : [
+                        {
+                            "description" : "Delete SystemEventSubscription 19 and 22.",
+                            
+                            "request": [
+                                "DELETE /api/system-event-subscription/19,22",
+                                "HTTP/1.1 Host: mygreatshapetoday.com",
+                                "Authorization: Basic XXXXXXXXXXXXXXXXXXXXXXXXX",
+                                "Accept: application/json",
+                                "X-API-Version: 1.0"
+                            ],
+                            
+                            "request_body": "",
+                            
+                            "response_headers":[
+                                "keep-alive: timeout=15, max=100",
+                                "content-type: application/json",
+                                "server: Apache/2.2.14 (Ubuntu)",
+                                "content-length: 37",
+                                "connection: Keep-Alive",
+                                "x-powered-by: PHP/5.3.2-1ubuntu4.7",
+                                "date: Mon, 18 Apr 2011 20:47:41 GMT"
+                            ],
+                            
+                            "response_body" : {
+                                 "deleted": [22,19],
+                                 "errors": []
+                            }
+                        }
+                    ]
+                }
+            ]
+		}
