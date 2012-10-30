@@ -4,3 +4,6 @@
 [submodule "htdocs/project/plugins/sfPropelORMPlugin"]
 	path = htdocs/project/plugins/sfPropelORMPlugin
 	url = git://github.com/propelorm/sfPropelORMPlugin.git
+[submodule "htdocs/project/lib/vendor/symfony"]
+	path = htdocs/project/lib/vendor/symfony
+	url = git://github.com/zedola/symfony1.git
