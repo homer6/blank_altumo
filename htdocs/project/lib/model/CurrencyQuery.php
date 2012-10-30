@@ -3,7 +3,7 @@
 
 
 /**
- * Skeleton subclass for performing query and update operations on the 'contact_information' table.
+ * Skeleton subclass for performing query and update operations on the 'currency' table.
  *
  * 
  *
@@ -13,8 +13,6 @@
  *
  * @package    propel.generator.lib.model
  */
+class CurrencyQuery extends BaseCurrencyQuery {
 
-
-class ContactInformationQuery extends \sfAltumoPlugin\Model\ContactInformationQuery {
-
-} // ContactInformationQuery
+} // CurrencyQuery

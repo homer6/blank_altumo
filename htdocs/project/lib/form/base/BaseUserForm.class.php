@@ -14,33 +14,29 @@ abstract class BaseUserForm extends BaseFormPropel
   public function setup()
   {
     $this->setWidgets(array(
-      'id'                     => new sfWidgetFormInputHidden(),
-      'email'                  => new sfWidgetFormInputText(),
-      'contact_information_id' => new sfWidgetFormPropelChoice(array('model' => 'ContactInformation', 'add_empty' => true)),
-      'salt'                   => new sfWidgetFormInputText(),
-      'password'               => new sfWidgetFormInputText(),
-      'password_reset_key'     => new sfWidgetFormInputText(),
-      'active'                 => new sfWidgetFormInputCheckbox(),
-      'created_at'             => new sfWidgetFormDateTime(),
-      'updated_at'             => new sfWidgetFormDateTime(),
+      'id'                 => new sfWidgetFormInputHidden(),
+      'password_reset_key' => new sfWidgetFormInputText(),
+      'sf_guard_user_id'   => new sfWidgetFormPropelChoice(array('model' => 'sfGuardUser', 'add_empty' => false)),
+      'contact_id'         => new sfWidgetFormPropelChoice(array('model' => 'Contact', 'add_empty' => true)),
+      'active'             => new sfWidgetFormInputCheckbox(),
+      'created_at'         => new sfWidgetFormDateTime(),
+      'updated_at'         => new sfWidgetFormDateTime(),
     ));
 
     $this->setValidators(array(
-      'id'                     => new sfValidatorPropelChoice(array('model' => 'User', 'column' => 'id', 'required' => false)),
-      'email'                  => new sfValidatorString(array('max_length' => 128)),
-      'contact_information_id' => new sfValidatorPropelChoice(array('model' => 'ContactInformation', 'column' => 'id', 'required' => false)),
-      'salt'                   => new sfValidatorString(array('max_length' => 128)),
-      'password'               => new sfValidatorString(array('max_length' => 128)),
-      'password_reset_key'     => new sfValidatorString(array('max_length' => 16, 'required' => false)),
-      'active'                 => new sfValidatorBoolean(),
-      'created_at'             => new sfValidatorDateTime(array('required' => false)),
-      'updated_at'             => new sfValidatorDateTime(array('required' => false)),
+      'id'                 => new sfValidatorChoice(array('choices' => array($this->getObject()->getId()), 'empty_value' => $this->getObject()->getId(), 'required' => false)),
+      'password_reset_key' => new sfValidatorString(array('max_length' => 16, 'required' => false)),
+      'sf_guard_user_id'   => new sfValidatorPropelChoice(array('model' => 'sfGuardUser', 'column' => 'id')),
+      'contact_id'         => new sfValidatorPropelChoice(array('model' => 'Contact', 'column' => 'id', 'required' => false)),
+      'active'             => new sfValidatorBoolean(array('required' => false)),
+      'created_at'         => new sfValidatorDateTime(array('required' => false)),
+      'updated_at'         => new sfValidatorDateTime(array('required' => false)),
     ));
 
     $this->validatorSchema->setPostValidator(
       new sfValidatorAnd(array(
         new sfValidatorPropelUnique(array('model' => 'User', 'column' => array('password_reset_key'))),
-        new sfValidatorPropelUnique(array('model' => 'User', 'column' => array('email'))),
+        new sfValidatorPropelUnique(array('model' => 'User', 'column' => array('sf_guard_user_id'))),
       ))
     );
 

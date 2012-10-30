@@ -24,7 +24,7 @@ abstract class BaseSystemEventForm extends BaseFormPropel
     ));
 
     $this->setValidators(array(
-      'id'         => new sfValidatorPropelChoice(array('model' => 'SystemEvent', 'column' => 'id', 'required' => false)),
+      'id'         => new sfValidatorChoice(array('choices' => array($this->getObject()->getId()), 'empty_value' => $this->getObject()->getId(), 'required' => false)),
       'name'       => new sfValidatorString(array('max_length' => 64)),
       'unique_key' => new sfValidatorString(array('max_length' => 64)),
       'slug'       => new sfValidatorString(array('max_length' => 255)),

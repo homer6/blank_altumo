@@ -1,13 +1,13 @@
 <?php
 
 /**
- * ContactInformation form.
+ * Contact form.
  *
  * @package    blank
  * @subpackage form
  * @author     Your name here
  */
-class ContactInformationForm extends BaseContactInformationForm
+class ContactForm extends BaseContactForm
 {
   public function configure()
   {

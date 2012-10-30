@@ -18,16 +18,18 @@ abstract class BaseSingleSignOnKeyForm extends BaseFormPropel
       'secret'            => new sfWidgetFormInputText(),
       'used'              => new sfWidgetFormInputCheckbox(),
       'session_id'        => new sfWidgetFormPropelChoice(array('model' => 'Session', 'add_empty' => true)),
+      'user_id'           => new sfWidgetFormPropelChoice(array('model' => 'User', 'add_empty' => false)),
       'valid_for_minutes' => new sfWidgetFormInputText(),
       'created_at'        => new sfWidgetFormDateTime(),
       'updated_at'        => new sfWidgetFormDateTime(),
     ));
 
     $this->setValidators(array(
-      'id'                => new sfValidatorPropelChoice(array('model' => 'SingleSignOnKey', 'column' => 'id', 'required' => false)),
+      'id'                => new sfValidatorChoice(array('choices' => array($this->getObject()->getId()), 'empty_value' => $this->getObject()->getId(), 'required' => false)),
       'secret'            => new sfValidatorString(array('max_length' => 32)),
       'used'              => new sfValidatorBoolean(),
       'session_id'        => new sfValidatorPropelChoice(array('model' => 'Session', 'column' => 'id', 'required' => false)),
+      'user_id'           => new sfValidatorPropelChoice(array('model' => 'User', 'column' => 'id')),
       'valid_for_minutes' => new sfValidatorInteger(array('min' => -2147483648, 'max' => 2147483647)),
       'created_at'        => new sfValidatorDateTime(array('required' => false)),
       'updated_at'        => new sfValidatorDateTime(array('required' => false)),

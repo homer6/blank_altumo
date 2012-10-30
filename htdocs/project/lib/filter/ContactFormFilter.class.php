@@ -1,13 +1,13 @@
 <?php
 
 /**
- * ContactInformation filter form.
+ * Contact filter form.
  *
  * @package    blank
  * @subpackage filter
  * @author     Your name here
  */
-class ContactInformationFormFilter extends BaseContactInformationFormFilter
+class ContactFormFilter extends BaseContactFormFilter
 {
   public function configure()
   {

@@ -24,17 +24,20 @@ abstract class BaseStateForm extends BaseFormPropel
     ));
 
     $this->setValidators(array(
-      'id'             => new sfValidatorPropelChoice(array('model' => 'State', 'column' => 'id', 'required' => false)),
+      'id'             => new sfValidatorChoice(array('choices' => array($this->getObject()->getId()), 'empty_value' => $this->getObject()->getId(), 'required' => false)),
       'name'           => new sfValidatorString(array('max_length' => 64)),
       'iso_code'       => new sfValidatorString(array('max_length' => 12)),
-      'iso_short_code' => new sfValidatorString(array('max_length' => 2)),
+      'iso_short_code' => new sfValidatorString(array('max_length' => 4)),
       'country_id'     => new sfValidatorPropelChoice(array('model' => 'Country', 'column' => 'id')),
       'created_at'     => new sfValidatorDateTime(array('required' => false)),
       'updated_at'     => new sfValidatorDateTime(array('required' => false)),
     ));
 
     $this->validatorSchema->setPostValidator(
-      new sfValidatorPropelUnique(array('model' => 'State', 'column' => array('iso_short_code')))
+      new sfValidatorAnd(array(
+        new sfValidatorPropelUnique(array('model' => 'State', 'column' => array('country_id', 'iso_short_code'))),
+        new sfValidatorPropelUnique(array('model' => 'State', 'column' => array('iso_code'))),
+      ))
     );
 
     $this->widgetSchema->setNameFormat('state[%s]');
