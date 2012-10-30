@@ -30,10 +30,6 @@
  * @method     sfGuardUserQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
  * @method     sfGuardUserQuery innerJoin($relation) Adds a INNER JOIN clause to the query
  *
- * @method     sfGuardUserQuery leftJoinUser($relationAlias = null) Adds a LEFT JOIN clause to the query using the User relation
- * @method     sfGuardUserQuery rightJoinUser($relationAlias = null) Adds a RIGHT JOIN clause to the query using the User relation
- * @method     sfGuardUserQuery innerJoinUser($relationAlias = null) Adds a INNER JOIN clause to the query using the User relation
- *
  * @method     sfGuardUserQuery leftJoinsfGuardUserPermission($relationAlias = null) Adds a LEFT JOIN clause to the query using the sfGuardUserPermission relation
  * @method     sfGuardUserQuery rightJoinsfGuardUserPermission($relationAlias = null) Adds a RIGHT JOIN clause to the query using the sfGuardUserPermission relation
  * @method     sfGuardUserQuery innerJoinsfGuardUserPermission($relationAlias = null) Adds a INNER JOIN clause to the query using the sfGuardUserPermission relation
@@ -45,6 +41,10 @@
  * @method     sfGuardUserQuery leftJoinsfGuardRememberKey($relationAlias = null) Adds a LEFT JOIN clause to the query using the sfGuardRememberKey relation
  * @method     sfGuardUserQuery rightJoinsfGuardRememberKey($relationAlias = null) Adds a RIGHT JOIN clause to the query using the sfGuardRememberKey relation
  * @method     sfGuardUserQuery innerJoinsfGuardRememberKey($relationAlias = null) Adds a INNER JOIN clause to the query using the sfGuardRememberKey relation
+ *
+ * @method     sfGuardUserQuery leftJoinUser($relationAlias = null) Adds a LEFT JOIN clause to the query using the User relation
+ * @method     sfGuardUserQuery rightJoinUser($relationAlias = null) Adds a RIGHT JOIN clause to the query using the User relation
+ * @method     sfGuardUserQuery innerJoinUser($relationAlias = null) Adds a INNER JOIN clause to the query using the User relation
  *
  * @method     sfGuardUser findOne(PropelPDO $con = null) Return the first sfGuardUser matching the query
  * @method     sfGuardUser findOneOrCreate(PropelPDO $con = null) Return the first sfGuardUser matching the query, or a new sfGuardUser object populated from the query conditions when no match is found
@@ -90,9 +90,9 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
      * Returns a new sfGuardUserQuery object.
      *
      * @param     string $modelAlias The alias of a model in the query
-     * @param     Criteria $criteria Optional Criteria to build the query from
+     * @param     sfGuardUserQuery|Criteria $criteria Optional Criteria to build the query from
      *
-     * @return    sfGuardUserQuery
+     * @return sfGuardUserQuery
      */
     public static function create($modelAlias = null, $criteria = null)
     {
@@ -106,33 +106,95 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
         if ($criteria instanceof Criteria) {
             $query->mergeWith($criteria);
         }
+
         return $query;
     }
 
     /**
-     * Find object by primary key
-     * Use instance pooling to avoid a database query if the object exists
+     * Find object by primary key.
+     * Propel uses the instance pool to skip the database if the object exists.
+     * Go fast if the query is untouched.
+     *
      * <code>
      * $obj  = $c->findPk(12, $con);
      * </code>
-     * @param     mixed $key Primary key to use for the query
+     *
+     * @param mixed $key Primary key to use for the query 
      * @param     PropelPDO $con an optional connection object
      *
-     * @return    sfGuardUser|array|mixed the result, formatted by the current formatter
+     * @return   sfGuardUser|sfGuardUser[]|mixed the result, formatted by the current formatter
      */
     public function findPk($key, $con = null)
     {
-        if ((null !== ($obj = sfGuardUserPeer::getInstanceFromPool((string) $key))) && $this->getFormatter()->isObjectFormatter()) {
+        if ($key === null) {
+            return null;
+        }
+        if ((null !== ($obj = sfGuardUserPeer::getInstanceFromPool((string) $key))) && !$this->formatter) {
             // the object is alredy in the instance pool
             return $obj;
-        } else {
-            // the object has not been requested yet, or the formatter is not an object formatter
-            $criteria = $this->isKeepQuery() ? clone $this : $this;
-            $stmt = $criteria
-                ->filterByPrimaryKey($key)
-                ->getSelectStatement($con);
-            return $criteria->getFormatter()->init($criteria)->formatOne($stmt);
         }
+        if ($con === null) {
+            $con = Propel::getConnection(sfGuardUserPeer::DATABASE_NAME, Propel::CONNECTION_READ);
+        }
+        $this->basePreSelect($con);
+        if ($this->formatter || $this->modelAlias || $this->with || $this->select
+         || $this->selectColumns || $this->asColumns || $this->selectModifiers
+         || $this->map || $this->having || $this->joins) {
+            return $this->findPkComplex($key, $con);
+        } else {
+            return $this->findPkSimple($key, $con);
+        }
+    }
+
+    /**
+     * Find object by primary key using raw SQL to go fast.
+     * Bypass doSelect() and the object formatter by using generated code.
+     *
+     * @param     mixed $key Primary key to use for the query
+     * @param     PropelPDO $con A connection object
+     *
+     * @return   sfGuardUser A model object, or null if the key is not found
+     * @throws   PropelException
+     */
+    protected function findPkSimple($key, $con)
+    {
+        $sql = 'SELECT `ID`, `USERNAME`, `ALGORITHM`, `SALT`, `PASSWORD`, `CREATED_AT`, `LAST_LOGIN`, `IS_ACTIVE`, `IS_SUPER_ADMIN` FROM `sf_guard_user` WHERE `ID` = :p0';
+        try {
+            $stmt = $con->prepare($sql);
+			$stmt->bindValue(':p0', $key, PDO::PARAM_INT);
+            $stmt->execute();
+        } catch (Exception $e) {
+            Propel::log($e->getMessage(), Propel::LOG_ERR);
+            throw new PropelException(sprintf('Unable to execute SELECT statement [%s]', $sql), $e);
+        }
+        $obj = null;
+        if ($row = $stmt->fetch(PDO::FETCH_NUM)) {
+            $obj = new sfGuardUser();
+            $obj->hydrate($row);
+            sfGuardUserPeer::addInstanceToPool($obj, (string) $key);
+        }
+        $stmt->closeCursor();
+
+        return $obj;
+    }
+
+    /**
+     * Find object by primary key.
+     *
+     * @param     mixed $key Primary key to use for the query
+     * @param     PropelPDO $con A connection object
+     *
+     * @return sfGuardUser|sfGuardUser[]|mixed the result, formatted by the current formatter
+     */
+    protected function findPkComplex($key, $con)
+    {
+        // As the query uses a PK condition, no limit(1) is necessary.
+        $criteria = $this->isKeepQuery() ? clone $this : $this;
+        $stmt = $criteria
+            ->filterByPrimaryKey($key)
+            ->doSelect($con);
+
+        return $criteria->getFormatter()->init($criteria)->formatOne($stmt);
     }
 
     /**
@@ -143,14 +205,20 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
      * @param     array $keys Primary keys to use for the query
      * @param     PropelPDO $con an optional connection object
      *
-     * @return    PropelObjectCollection|array|mixed the list of results, formatted by the current formatter
+     * @return PropelObjectCollection|sfGuardUser[]|mixed the list of results, formatted by the current formatter
      */
     public function findPks($keys, $con = null)
     {
+        if ($con === null) {
+            $con = Propel::getConnection($this->getDbName(), Propel::CONNECTION_READ);
+        }
+        $this->basePreSelect($con);
         $criteria = $this->isKeepQuery() ? clone $this : $this;
-        return $this
+        $stmt = $criteria
             ->filterByPrimaryKeys($keys)
-            ->find($con);
+            ->doSelect($con);
+
+        return $criteria->getFormatter()->init($criteria)->format($stmt);
     }
 
     /**
@@ -158,10 +226,11 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
      *
      * @param     mixed $key Primary key to use for the query
      *
-     * @return    sfGuardUserQuery The current query, for fluid interface
+     * @return sfGuardUserQuery The current query, for fluid interface
      */
     public function filterByPrimaryKey($key)
     {
+
         return $this->addUsingAlias(sfGuardUserPeer::ID, $key, Criteria::EQUAL);
     }
 
@@ -170,10 +239,11 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
      *
      * @param     array $keys The list of primary key to use for the query
      *
-     * @return    sfGuardUserQuery The current query, for fluid interface
+     * @return sfGuardUserQuery The current query, for fluid interface
      */
     public function filterByPrimaryKeys($keys)
     {
+
         return $this->addUsingAlias(sfGuardUserPeer::ID, $keys, Criteria::IN);
     }
 
@@ -193,13 +263,14 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    sfGuardUserQuery The current query, for fluid interface
+     * @return sfGuardUserQuery The current query, for fluid interface
      */
     public function filterById($id = null, $comparison = null)
     {
         if (is_array($id) && null === $comparison) {
             $comparison = Criteria::IN;
         }
+
         return $this->addUsingAlias(sfGuardUserPeer::ID, $id, $comparison);
     }
 
@@ -216,7 +287,7 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
      *              Accepts wildcards (* and % trigger a LIKE)
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    sfGuardUserQuery The current query, for fluid interface
+     * @return sfGuardUserQuery The current query, for fluid interface
      */
     public function filterByUsername($username = null, $comparison = null)
     {
@@ -228,6 +299,7 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
                 $comparison = Criteria::LIKE;
             }
         }
+
         return $this->addUsingAlias(sfGuardUserPeer::USERNAME, $username, $comparison);
     }
 
@@ -244,7 +316,7 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
      *              Accepts wildcards (* and % trigger a LIKE)
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    sfGuardUserQuery The current query, for fluid interface
+     * @return sfGuardUserQuery The current query, for fluid interface
      */
     public function filterByAlgorithm($algorithm = null, $comparison = null)
     {
@@ -256,6 +328,7 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
                 $comparison = Criteria::LIKE;
             }
         }
+
         return $this->addUsingAlias(sfGuardUserPeer::ALGORITHM, $algorithm, $comparison);
     }
 
@@ -272,7 +345,7 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
      *              Accepts wildcards (* and % trigger a LIKE)
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    sfGuardUserQuery The current query, for fluid interface
+     * @return sfGuardUserQuery The current query, for fluid interface
      */
     public function filterBySalt($salt = null, $comparison = null)
     {
@@ -284,6 +357,7 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
                 $comparison = Criteria::LIKE;
             }
         }
+
         return $this->addUsingAlias(sfGuardUserPeer::SALT, $salt, $comparison);
     }
 
@@ -300,7 +374,7 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
      *              Accepts wildcards (* and % trigger a LIKE)
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    sfGuardUserQuery The current query, for fluid interface
+     * @return sfGuardUserQuery The current query, for fluid interface
      */
     public function filterByPassword($password = null, $comparison = null)
     {
@@ -312,6 +386,7 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
                 $comparison = Criteria::LIKE;
             }
         }
+
         return $this->addUsingAlias(sfGuardUserPeer::PASSWORD, $password, $comparison);
     }
 
@@ -333,7 +408,7 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    sfGuardUserQuery The current query, for fluid interface
+     * @return sfGuardUserQuery The current query, for fluid interface
      */
     public function filterByCreatedAt($createdAt = null, $comparison = null)
     {
@@ -354,6 +429,7 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
                 $comparison = Criteria::IN;
             }
         }
+
         return $this->addUsingAlias(sfGuardUserPeer::CREATED_AT, $createdAt, $comparison);
     }
 
@@ -375,7 +451,7 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    sfGuardUserQuery The current query, for fluid interface
+     * @return sfGuardUserQuery The current query, for fluid interface
      */
     public function filterByLastLogin($lastLogin = null, $comparison = null)
     {
@@ -396,6 +472,7 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
                 $comparison = Criteria::IN;
             }
         }
+
         return $this->addUsingAlias(sfGuardUserPeer::LAST_LOGIN, $lastLogin, $comparison);
     }
 
@@ -415,13 +492,14 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
      *              Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    sfGuardUserQuery The current query, for fluid interface
+     * @return sfGuardUserQuery The current query, for fluid interface
      */
     public function filterByIsActive($isActive = null, $comparison = null)
     {
         if (is_string($isActive)) {
             $is_active = in_array(strtolower($isActive), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
         }
+
         return $this->addUsingAlias(sfGuardUserPeer::IS_ACTIVE, $isActive, $comparison);
     }
 
@@ -441,103 +519,32 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
      *              Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    sfGuardUserQuery The current query, for fluid interface
+     * @return sfGuardUserQuery The current query, for fluid interface
      */
     public function filterByIsSuperAdmin($isSuperAdmin = null, $comparison = null)
     {
         if (is_string($isSuperAdmin)) {
             $is_super_admin = in_array(strtolower($isSuperAdmin), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
         }
+
         return $this->addUsingAlias(sfGuardUserPeer::IS_SUPER_ADMIN, $isSuperAdmin, $comparison);
-    }
-
-    /**
-     * Filter the query by a related User object
-     *
-     * @param     User $user  the related object to use as filter
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
-     *
-     * @return    sfGuardUserQuery The current query, for fluid interface
-     */
-    public function filterByUser($user, $comparison = null)
-    {
-        if ($user instanceof User) {
-            return $this
-                ->addUsingAlias(sfGuardUserPeer::ID, $user->getSfGuardUserId(), $comparison);
-        } elseif ($user instanceof PropelCollection) {
-            return $this
-                ->useUserQuery()
-                ->filterByPrimaryKeys($user->getPrimaryKeys())
-                ->endUse();
-        } else {
-            throw new PropelException('filterByUser() only accepts arguments of type User or PropelCollection');
-        }
-    }
-
-    /**
-     * Adds a JOIN clause to the query using the User relation
-     *
-     * @param     string $relationAlias optional alias for the relation
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
-     *
-     * @return    sfGuardUserQuery The current query, for fluid interface
-     */
-    public function joinUser($relationAlias = null, $joinType = Criteria::INNER_JOIN)
-    {
-        $tableMap = $this->getTableMap();
-        $relationMap = $tableMap->getRelation('User');
-
-        // create a ModelJoin object for this join
-        $join = new ModelJoin();
-        $join->setJoinType($joinType);
-        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
-        if ($previousJoin = $this->getPreviousJoin()) {
-            $join->setPreviousJoin($previousJoin);
-        }
-
-        // add the ModelJoin to the current object
-        if($relationAlias) {
-            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
-            $this->addJoinObject($join, $relationAlias);
-        } else {
-            $this->addJoinObject($join, 'User');
-        }
-
-        return $this;
-    }
-
-    /**
-     * Use the User relation User object
-     *
-     * @see       useQuery()
-     *
-     * @param     string $relationAlias optional alias for the relation,
-     *                                   to be used as main alias in the secondary query
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
-     *
-     * @return    UserQuery A secondary query class using the current class as primary query
-     */
-    public function useUserQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
-    {
-        return $this
-            ->joinUser($relationAlias, $joinType)
-            ->useQuery($relationAlias ? $relationAlias : 'User', 'UserQuery');
     }
 
     /**
      * Filter the query by a related sfGuardUserPermission object
      *
-     * @param     sfGuardUserPermission $sfGuardUserPermission  the related object to use as filter
+     * @param   sfGuardUserPermission|PropelObjectCollection $sfGuardUserPermission  the related object to use as filter
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    sfGuardUserQuery The current query, for fluid interface
+     * @return   sfGuardUserQuery The current query, for fluid interface
+     * @throws   PropelException - if the provided filter is invalid.
      */
     public function filterBysfGuardUserPermission($sfGuardUserPermission, $comparison = null)
     {
         if ($sfGuardUserPermission instanceof sfGuardUserPermission) {
             return $this
                 ->addUsingAlias(sfGuardUserPeer::ID, $sfGuardUserPermission->getUserId(), $comparison);
-        } elseif ($sfGuardUserPermission instanceof PropelCollection) {
+        } elseif ($sfGuardUserPermission instanceof PropelObjectCollection) {
             return $this
                 ->usesfGuardUserPermissionQuery()
                 ->filterByPrimaryKeys($sfGuardUserPermission->getPrimaryKeys())
@@ -553,7 +560,7 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
      * @param     string $relationAlias optional alias for the relation
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    sfGuardUserQuery The current query, for fluid interface
+     * @return sfGuardUserQuery The current query, for fluid interface
      */
     public function joinsfGuardUserPermission($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
@@ -569,7 +576,7 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
         }
 
         // add the ModelJoin to the current object
-        if($relationAlias) {
+        if ($relationAlias) {
             $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
             $this->addJoinObject($join, $relationAlias);
         } else {
@@ -588,7 +595,7 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
      *                                   to be used as main alias in the secondary query
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    sfGuardUserPermissionQuery A secondary query class using the current class as primary query
+     * @return   sfGuardUserPermissionQuery A secondary query class using the current class as primary query
      */
     public function usesfGuardUserPermissionQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
@@ -600,17 +607,18 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
     /**
      * Filter the query by a related sfGuardUserGroup object
      *
-     * @param     sfGuardUserGroup $sfGuardUserGroup  the related object to use as filter
+     * @param   sfGuardUserGroup|PropelObjectCollection $sfGuardUserGroup  the related object to use as filter
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    sfGuardUserQuery The current query, for fluid interface
+     * @return   sfGuardUserQuery The current query, for fluid interface
+     * @throws   PropelException - if the provided filter is invalid.
      */
     public function filterBysfGuardUserGroup($sfGuardUserGroup, $comparison = null)
     {
         if ($sfGuardUserGroup instanceof sfGuardUserGroup) {
             return $this
                 ->addUsingAlias(sfGuardUserPeer::ID, $sfGuardUserGroup->getUserId(), $comparison);
-        } elseif ($sfGuardUserGroup instanceof PropelCollection) {
+        } elseif ($sfGuardUserGroup instanceof PropelObjectCollection) {
             return $this
                 ->usesfGuardUserGroupQuery()
                 ->filterByPrimaryKeys($sfGuardUserGroup->getPrimaryKeys())
@@ -626,7 +634,7 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
      * @param     string $relationAlias optional alias for the relation
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    sfGuardUserQuery The current query, for fluid interface
+     * @return sfGuardUserQuery The current query, for fluid interface
      */
     public function joinsfGuardUserGroup($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
@@ -642,7 +650,7 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
         }
 
         // add the ModelJoin to the current object
-        if($relationAlias) {
+        if ($relationAlias) {
             $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
             $this->addJoinObject($join, $relationAlias);
         } else {
@@ -661,7 +669,7 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
      *                                   to be used as main alias in the secondary query
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    sfGuardUserGroupQuery A secondary query class using the current class as primary query
+     * @return   sfGuardUserGroupQuery A secondary query class using the current class as primary query
      */
     public function usesfGuardUserGroupQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
@@ -673,17 +681,18 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
     /**
      * Filter the query by a related sfGuardRememberKey object
      *
-     * @param     sfGuardRememberKey $sfGuardRememberKey  the related object to use as filter
+     * @param   sfGuardRememberKey|PropelObjectCollection $sfGuardRememberKey  the related object to use as filter
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    sfGuardUserQuery The current query, for fluid interface
+     * @return   sfGuardUserQuery The current query, for fluid interface
+     * @throws   PropelException - if the provided filter is invalid.
      */
     public function filterBysfGuardRememberKey($sfGuardRememberKey, $comparison = null)
     {
         if ($sfGuardRememberKey instanceof sfGuardRememberKey) {
             return $this
                 ->addUsingAlias(sfGuardUserPeer::ID, $sfGuardRememberKey->getUserId(), $comparison);
-        } elseif ($sfGuardRememberKey instanceof PropelCollection) {
+        } elseif ($sfGuardRememberKey instanceof PropelObjectCollection) {
             return $this
                 ->usesfGuardRememberKeyQuery()
                 ->filterByPrimaryKeys($sfGuardRememberKey->getPrimaryKeys())
@@ -699,7 +708,7 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
      * @param     string $relationAlias optional alias for the relation
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    sfGuardUserQuery The current query, for fluid interface
+     * @return sfGuardUserQuery The current query, for fluid interface
      */
     public function joinsfGuardRememberKey($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
@@ -715,7 +724,7 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
         }
 
         // add the ModelJoin to the current object
-        if($relationAlias) {
+        if ($relationAlias) {
             $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
             $this->addJoinObject($join, $relationAlias);
         } else {
@@ -734,7 +743,7 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
      *                                   to be used as main alias in the secondary query
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    sfGuardRememberKeyQuery A secondary query class using the current class as primary query
+     * @return   sfGuardRememberKeyQuery A secondary query class using the current class as primary query
      */
     public function usesfGuardRememberKeyQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
@@ -744,11 +753,85 @@ abstract class BasesfGuardUserQuery extends ModelCriteria
     }
 
     /**
+     * Filter the query by a related User object
+     *
+     * @param   User|PropelObjectCollection $user  the related object to use as filter
+     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return   sfGuardUserQuery The current query, for fluid interface
+     * @throws   PropelException - if the provided filter is invalid.
+     */
+    public function filterByUser($user, $comparison = null)
+    {
+        if ($user instanceof User) {
+            return $this
+                ->addUsingAlias(sfGuardUserPeer::ID, $user->getSfGuardUserId(), $comparison);
+        } elseif ($user instanceof PropelObjectCollection) {
+            return $this
+                ->useUserQuery()
+                ->filterByPrimaryKeys($user->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterByUser() only accepts arguments of type User or PropelCollection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the User relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return sfGuardUserQuery The current query, for fluid interface
+     */
+    public function joinUser($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('User');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'User');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the User relation User object
+     *
+     * @see       useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return   UserQuery A secondary query class using the current class as primary query
+     */
+    public function useUserQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinUser($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'User', 'UserQuery');
+    }
+
+    /**
      * Exclude object from result
      *
-     * @param     sfGuardUser $sfGuardUser Object to remove from the list of results
+     * @param   sfGuardUser $sfGuardUser Object to remove from the list of results
      *
-     * @return    sfGuardUserQuery The current query, for fluid interface
+     * @return sfGuardUserQuery The current query, for fluid interface
      */
     public function prune($sfGuardUser = null)
     {

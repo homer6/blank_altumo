@@ -78,9 +78,9 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
      * Returns a new SingleSignOnKeyQuery object.
      *
      * @param     string $modelAlias The alias of a model in the query
-     * @param     Criteria $criteria Optional Criteria to build the query from
+     * @param     SingleSignOnKeyQuery|Criteria $criteria Optional Criteria to build the query from
      *
-     * @return    SingleSignOnKeyQuery
+     * @return SingleSignOnKeyQuery
      */
     public static function create($modelAlias = null, $criteria = null)
     {
@@ -94,33 +94,95 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
         if ($criteria instanceof Criteria) {
             $query->mergeWith($criteria);
         }
+
         return $query;
     }
 
     /**
-     * Find object by primary key
-     * Use instance pooling to avoid a database query if the object exists
+     * Find object by primary key.
+     * Propel uses the instance pool to skip the database if the object exists.
+     * Go fast if the query is untouched.
+     *
      * <code>
      * $obj  = $c->findPk(12, $con);
      * </code>
-     * @param     mixed $key Primary key to use for the query
+     *
+     * @param mixed $key Primary key to use for the query 
      * @param     PropelPDO $con an optional connection object
      *
-     * @return    SingleSignOnKey|array|mixed the result, formatted by the current formatter
+     * @return   SingleSignOnKey|SingleSignOnKey[]|mixed the result, formatted by the current formatter
      */
     public function findPk($key, $con = null)
     {
-        if ((null !== ($obj = SingleSignOnKeyPeer::getInstanceFromPool((string) $key))) && $this->getFormatter()->isObjectFormatter()) {
+        if ($key === null) {
+            return null;
+        }
+        if ((null !== ($obj = SingleSignOnKeyPeer::getInstanceFromPool((string) $key))) && !$this->formatter) {
             // the object is alredy in the instance pool
             return $obj;
-        } else {
-            // the object has not been requested yet, or the formatter is not an object formatter
-            $criteria = $this->isKeepQuery() ? clone $this : $this;
-            $stmt = $criteria
-                ->filterByPrimaryKey($key)
-                ->getSelectStatement($con);
-            return $criteria->getFormatter()->init($criteria)->formatOne($stmt);
         }
+        if ($con === null) {
+            $con = Propel::getConnection(SingleSignOnKeyPeer::DATABASE_NAME, Propel::CONNECTION_READ);
+        }
+        $this->basePreSelect($con);
+        if ($this->formatter || $this->modelAlias || $this->with || $this->select
+         || $this->selectColumns || $this->asColumns || $this->selectModifiers
+         || $this->map || $this->having || $this->joins) {
+            return $this->findPkComplex($key, $con);
+        } else {
+            return $this->findPkSimple($key, $con);
+        }
+    }
+
+    /**
+     * Find object by primary key using raw SQL to go fast.
+     * Bypass doSelect() and the object formatter by using generated code.
+     *
+     * @param     mixed $key Primary key to use for the query
+     * @param     PropelPDO $con A connection object
+     *
+     * @return   SingleSignOnKey A model object, or null if the key is not found
+     * @throws   PropelException
+     */
+    protected function findPkSimple($key, $con)
+    {
+        $sql = 'SELECT `ID`, `SECRET`, `USED`, `SESSION_ID`, `USER_ID`, `VALID_FOR_MINUTES`, `CREATED_AT`, `UPDATED_AT` FROM `single_sign_on_key` WHERE `ID` = :p0';
+        try {
+            $stmt = $con->prepare($sql);
+			$stmt->bindValue(':p0', $key, PDO::PARAM_INT);
+            $stmt->execute();
+        } catch (Exception $e) {
+            Propel::log($e->getMessage(), Propel::LOG_ERR);
+            throw new PropelException(sprintf('Unable to execute SELECT statement [%s]', $sql), $e);
+        }
+        $obj = null;
+        if ($row = $stmt->fetch(PDO::FETCH_NUM)) {
+            $obj = new SingleSignOnKey();
+            $obj->hydrate($row);
+            SingleSignOnKeyPeer::addInstanceToPool($obj, (string) $key);
+        }
+        $stmt->closeCursor();
+
+        return $obj;
+    }
+
+    /**
+     * Find object by primary key.
+     *
+     * @param     mixed $key Primary key to use for the query
+     * @param     PropelPDO $con A connection object
+     *
+     * @return SingleSignOnKey|SingleSignOnKey[]|mixed the result, formatted by the current formatter
+     */
+    protected function findPkComplex($key, $con)
+    {
+        // As the query uses a PK condition, no limit(1) is necessary.
+        $criteria = $this->isKeepQuery() ? clone $this : $this;
+        $stmt = $criteria
+            ->filterByPrimaryKey($key)
+            ->doSelect($con);
+
+        return $criteria->getFormatter()->init($criteria)->formatOne($stmt);
     }
 
     /**
@@ -131,14 +193,20 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
      * @param     array $keys Primary keys to use for the query
      * @param     PropelPDO $con an optional connection object
      *
-     * @return    PropelObjectCollection|array|mixed the list of results, formatted by the current formatter
+     * @return PropelObjectCollection|SingleSignOnKey[]|mixed the list of results, formatted by the current formatter
      */
     public function findPks($keys, $con = null)
     {
+        if ($con === null) {
+            $con = Propel::getConnection($this->getDbName(), Propel::CONNECTION_READ);
+        }
+        $this->basePreSelect($con);
         $criteria = $this->isKeepQuery() ? clone $this : $this;
-        return $this
+        $stmt = $criteria
             ->filterByPrimaryKeys($keys)
-            ->find($con);
+            ->doSelect($con);
+
+        return $criteria->getFormatter()->init($criteria)->format($stmt);
     }
 
     /**
@@ -146,10 +214,11 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
      *
      * @param     mixed $key Primary key to use for the query
      *
-     * @return    SingleSignOnKeyQuery The current query, for fluid interface
+     * @return SingleSignOnKeyQuery The current query, for fluid interface
      */
     public function filterByPrimaryKey($key)
     {
+
         return $this->addUsingAlias(SingleSignOnKeyPeer::ID, $key, Criteria::EQUAL);
     }
 
@@ -158,10 +227,11 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
      *
      * @param     array $keys The list of primary key to use for the query
      *
-     * @return    SingleSignOnKeyQuery The current query, for fluid interface
+     * @return SingleSignOnKeyQuery The current query, for fluid interface
      */
     public function filterByPrimaryKeys($keys)
     {
+
         return $this->addUsingAlias(SingleSignOnKeyPeer::ID, $keys, Criteria::IN);
     }
 
@@ -181,13 +251,14 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    SingleSignOnKeyQuery The current query, for fluid interface
+     * @return SingleSignOnKeyQuery The current query, for fluid interface
      */
     public function filterById($id = null, $comparison = null)
     {
         if (is_array($id) && null === $comparison) {
             $comparison = Criteria::IN;
         }
+
         return $this->addUsingAlias(SingleSignOnKeyPeer::ID, $id, $comparison);
     }
 
@@ -204,7 +275,7 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
      *              Accepts wildcards (* and % trigger a LIKE)
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    SingleSignOnKeyQuery The current query, for fluid interface
+     * @return SingleSignOnKeyQuery The current query, for fluid interface
      */
     public function filterBySecret($secret = null, $comparison = null)
     {
@@ -216,6 +287,7 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
                 $comparison = Criteria::LIKE;
             }
         }
+
         return $this->addUsingAlias(SingleSignOnKeyPeer::SECRET, $secret, $comparison);
     }
 
@@ -235,13 +307,14 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
      *              Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    SingleSignOnKeyQuery The current query, for fluid interface
+     * @return SingleSignOnKeyQuery The current query, for fluid interface
      */
     public function filterByUsed($used = null, $comparison = null)
     {
         if (is_string($used)) {
             $used = in_array(strtolower($used), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
         }
+
         return $this->addUsingAlias(SingleSignOnKeyPeer::USED, $used, $comparison);
     }
 
@@ -263,7 +336,7 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    SingleSignOnKeyQuery The current query, for fluid interface
+     * @return SingleSignOnKeyQuery The current query, for fluid interface
      */
     public function filterBySessionId($sessionId = null, $comparison = null)
     {
@@ -284,6 +357,7 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
                 $comparison = Criteria::IN;
             }
         }
+
         return $this->addUsingAlias(SingleSignOnKeyPeer::SESSION_ID, $sessionId, $comparison);
     }
 
@@ -305,7 +379,7 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    SingleSignOnKeyQuery The current query, for fluid interface
+     * @return SingleSignOnKeyQuery The current query, for fluid interface
      */
     public function filterByUserId($userId = null, $comparison = null)
     {
@@ -326,6 +400,7 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
                 $comparison = Criteria::IN;
             }
         }
+
         return $this->addUsingAlias(SingleSignOnKeyPeer::USER_ID, $userId, $comparison);
     }
 
@@ -345,7 +420,7 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    SingleSignOnKeyQuery The current query, for fluid interface
+     * @return SingleSignOnKeyQuery The current query, for fluid interface
      */
     public function filterByValidForMinutes($validForMinutes = null, $comparison = null)
     {
@@ -366,6 +441,7 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
                 $comparison = Criteria::IN;
             }
         }
+
         return $this->addUsingAlias(SingleSignOnKeyPeer::VALID_FOR_MINUTES, $validForMinutes, $comparison);
     }
 
@@ -387,7 +463,7 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    SingleSignOnKeyQuery The current query, for fluid interface
+     * @return SingleSignOnKeyQuery The current query, for fluid interface
      */
     public function filterByCreatedAt($createdAt = null, $comparison = null)
     {
@@ -408,6 +484,7 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
                 $comparison = Criteria::IN;
             }
         }
+
         return $this->addUsingAlias(SingleSignOnKeyPeer::CREATED_AT, $createdAt, $comparison);
     }
 
@@ -429,7 +506,7 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    SingleSignOnKeyQuery The current query, for fluid interface
+     * @return SingleSignOnKeyQuery The current query, for fluid interface
      */
     public function filterByUpdatedAt($updatedAt = null, $comparison = null)
     {
@@ -450,26 +527,29 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
                 $comparison = Criteria::IN;
             }
         }
+
         return $this->addUsingAlias(SingleSignOnKeyPeer::UPDATED_AT, $updatedAt, $comparison);
     }
 
     /**
      * Filter the query by a related Session object
      *
-     * @param     Session|PropelCollection $session The related object(s) to use as filter
+     * @param   Session|PropelObjectCollection $session The related object(s) to use as filter
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    SingleSignOnKeyQuery The current query, for fluid interface
+     * @return   SingleSignOnKeyQuery The current query, for fluid interface
+     * @throws   PropelException - if the provided filter is invalid.
      */
     public function filterBySession($session, $comparison = null)
     {
         if ($session instanceof Session) {
             return $this
                 ->addUsingAlias(SingleSignOnKeyPeer::SESSION_ID, $session->getId(), $comparison);
-        } elseif ($session instanceof PropelCollection) {
+        } elseif ($session instanceof PropelObjectCollection) {
             if (null === $comparison) {
                 $comparison = Criteria::IN;
             }
+
             return $this
                 ->addUsingAlias(SingleSignOnKeyPeer::SESSION_ID, $session->toKeyValue('PrimaryKey', 'Id'), $comparison);
         } else {
@@ -483,7 +563,7 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
      * @param     string $relationAlias optional alias for the relation
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    SingleSignOnKeyQuery The current query, for fluid interface
+     * @return SingleSignOnKeyQuery The current query, for fluid interface
      */
     public function joinSession($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
     {
@@ -499,7 +579,7 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
         }
 
         // add the ModelJoin to the current object
-        if($relationAlias) {
+        if ($relationAlias) {
             $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
             $this->addJoinObject($join, $relationAlias);
         } else {
@@ -518,7 +598,7 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
      *                                   to be used as main alias in the secondary query
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    SessionQuery A secondary query class using the current class as primary query
+     * @return   SessionQuery A secondary query class using the current class as primary query
      */
     public function useSessionQuery($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
     {
@@ -530,20 +610,22 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
     /**
      * Filter the query by a related User object
      *
-     * @param     User|PropelCollection $user The related object(s) to use as filter
+     * @param   User|PropelObjectCollection $user The related object(s) to use as filter
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    SingleSignOnKeyQuery The current query, for fluid interface
+     * @return   SingleSignOnKeyQuery The current query, for fluid interface
+     * @throws   PropelException - if the provided filter is invalid.
      */
     public function filterByUser($user, $comparison = null)
     {
         if ($user instanceof User) {
             return $this
                 ->addUsingAlias(SingleSignOnKeyPeer::USER_ID, $user->getId(), $comparison);
-        } elseif ($user instanceof PropelCollection) {
+        } elseif ($user instanceof PropelObjectCollection) {
             if (null === $comparison) {
                 $comparison = Criteria::IN;
             }
+
             return $this
                 ->addUsingAlias(SingleSignOnKeyPeer::USER_ID, $user->toKeyValue('PrimaryKey', 'Id'), $comparison);
         } else {
@@ -557,7 +639,7 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
      * @param     string $relationAlias optional alias for the relation
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    SingleSignOnKeyQuery The current query, for fluid interface
+     * @return SingleSignOnKeyQuery The current query, for fluid interface
      */
     public function joinUser($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
@@ -573,7 +655,7 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
         }
 
         // add the ModelJoin to the current object
-        if($relationAlias) {
+        if ($relationAlias) {
             $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
             $this->addJoinObject($join, $relationAlias);
         } else {
@@ -592,7 +674,7 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
      *                                   to be used as main alias in the secondary query
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    UserQuery A secondary query class using the current class as primary query
+     * @return   UserQuery A secondary query class using the current class as primary query
      */
     public function useUserQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
@@ -604,9 +686,9 @@ abstract class BaseSingleSignOnKeyQuery extends ModelCriteria
     /**
      * Exclude object from result
      *
-     * @param     SingleSignOnKey $singleSignOnKey Object to remove from the list of results
+     * @param   SingleSignOnKey $singleSignOnKey Object to remove from the list of results
      *
-     * @return    SingleSignOnKeyQuery The current query, for fluid interface
+     * @return SingleSignOnKeyQuery The current query, for fluid interface
      */
     public function prune($singleSignOnKey = null)
     {

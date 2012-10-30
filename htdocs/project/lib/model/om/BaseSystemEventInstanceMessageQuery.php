@@ -78,9 +78,9 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
      * Returns a new SystemEventInstanceMessageQuery object.
      *
      * @param     string $modelAlias The alias of a model in the query
-     * @param     Criteria $criteria Optional Criteria to build the query from
+     * @param     SystemEventInstanceMessageQuery|Criteria $criteria Optional Criteria to build the query from
      *
-     * @return    SystemEventInstanceMessageQuery
+     * @return SystemEventInstanceMessageQuery
      */
     public static function create($modelAlias = null, $criteria = null)
     {
@@ -94,33 +94,95 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
         if ($criteria instanceof Criteria) {
             $query->mergeWith($criteria);
         }
+
         return $query;
     }
 
     /**
-     * Find object by primary key
-     * Use instance pooling to avoid a database query if the object exists
+     * Find object by primary key.
+     * Propel uses the instance pool to skip the database if the object exists.
+     * Go fast if the query is untouched.
+     *
      * <code>
      * $obj  = $c->findPk(12, $con);
      * </code>
-     * @param     mixed $key Primary key to use for the query
+     *
+     * @param mixed $key Primary key to use for the query 
      * @param     PropelPDO $con an optional connection object
      *
-     * @return    SystemEventInstanceMessage|array|mixed the result, formatted by the current formatter
+     * @return   SystemEventInstanceMessage|SystemEventInstanceMessage[]|mixed the result, formatted by the current formatter
      */
     public function findPk($key, $con = null)
     {
-        if ((null !== ($obj = SystemEventInstanceMessagePeer::getInstanceFromPool((string) $key))) && $this->getFormatter()->isObjectFormatter()) {
+        if ($key === null) {
+            return null;
+        }
+        if ((null !== ($obj = SystemEventInstanceMessagePeer::getInstanceFromPool((string) $key))) && !$this->formatter) {
             // the object is alredy in the instance pool
             return $obj;
-        } else {
-            // the object has not been requested yet, or the formatter is not an object formatter
-            $criteria = $this->isKeepQuery() ? clone $this : $this;
-            $stmt = $criteria
-                ->filterByPrimaryKey($key)
-                ->getSelectStatement($con);
-            return $criteria->getFormatter()->init($criteria)->formatOne($stmt);
         }
+        if ($con === null) {
+            $con = Propel::getConnection(SystemEventInstanceMessagePeer::DATABASE_NAME, Propel::CONNECTION_READ);
+        }
+        $this->basePreSelect($con);
+        if ($this->formatter || $this->modelAlias || $this->with || $this->select
+         || $this->selectColumns || $this->asColumns || $this->selectModifiers
+         || $this->map || $this->having || $this->joins) {
+            return $this->findPkComplex($key, $con);
+        } else {
+            return $this->findPkSimple($key, $con);
+        }
+    }
+
+    /**
+     * Find object by primary key using raw SQL to go fast.
+     * Bypass doSelect() and the object formatter by using generated code.
+     *
+     * @param     mixed $key Primary key to use for the query
+     * @param     PropelPDO $con A connection object
+     *
+     * @return   SystemEventInstanceMessage A model object, or null if the key is not found
+     * @throws   PropelException
+     */
+    protected function findPkSimple($key, $con)
+    {
+        $sql = 'SELECT `ID`, `SYSTEM_EVENT_INSTANCE_ID`, `SYSTEM_EVENT_SUBSCRIPTION_ID`, `RECEIVED`, `RECEIVED_AT`, `STATUS_MESSAGE`, `CREATED_AT`, `UPDATED_AT` FROM `system_event_instance_message` WHERE `ID` = :p0';
+        try {
+            $stmt = $con->prepare($sql);
+			$stmt->bindValue(':p0', $key, PDO::PARAM_INT);
+            $stmt->execute();
+        } catch (Exception $e) {
+            Propel::log($e->getMessage(), Propel::LOG_ERR);
+            throw new PropelException(sprintf('Unable to execute SELECT statement [%s]', $sql), $e);
+        }
+        $obj = null;
+        if ($row = $stmt->fetch(PDO::FETCH_NUM)) {
+            $obj = new SystemEventInstanceMessage();
+            $obj->hydrate($row);
+            SystemEventInstanceMessagePeer::addInstanceToPool($obj, (string) $key);
+        }
+        $stmt->closeCursor();
+
+        return $obj;
+    }
+
+    /**
+     * Find object by primary key.
+     *
+     * @param     mixed $key Primary key to use for the query
+     * @param     PropelPDO $con A connection object
+     *
+     * @return SystemEventInstanceMessage|SystemEventInstanceMessage[]|mixed the result, formatted by the current formatter
+     */
+    protected function findPkComplex($key, $con)
+    {
+        // As the query uses a PK condition, no limit(1) is necessary.
+        $criteria = $this->isKeepQuery() ? clone $this : $this;
+        $stmt = $criteria
+            ->filterByPrimaryKey($key)
+            ->doSelect($con);
+
+        return $criteria->getFormatter()->init($criteria)->formatOne($stmt);
     }
 
     /**
@@ -131,14 +193,20 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
      * @param     array $keys Primary keys to use for the query
      * @param     PropelPDO $con an optional connection object
      *
-     * @return    PropelObjectCollection|array|mixed the list of results, formatted by the current formatter
+     * @return PropelObjectCollection|SystemEventInstanceMessage[]|mixed the list of results, formatted by the current formatter
      */
     public function findPks($keys, $con = null)
     {
+        if ($con === null) {
+            $con = Propel::getConnection($this->getDbName(), Propel::CONNECTION_READ);
+        }
+        $this->basePreSelect($con);
         $criteria = $this->isKeepQuery() ? clone $this : $this;
-        return $this
+        $stmt = $criteria
             ->filterByPrimaryKeys($keys)
-            ->find($con);
+            ->doSelect($con);
+
+        return $criteria->getFormatter()->init($criteria)->format($stmt);
     }
 
     /**
@@ -146,10 +214,11 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
      *
      * @param     mixed $key Primary key to use for the query
      *
-     * @return    SystemEventInstanceMessageQuery The current query, for fluid interface
+     * @return SystemEventInstanceMessageQuery The current query, for fluid interface
      */
     public function filterByPrimaryKey($key)
     {
+
         return $this->addUsingAlias(SystemEventInstanceMessagePeer::ID, $key, Criteria::EQUAL);
     }
 
@@ -158,10 +227,11 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
      *
      * @param     array $keys The list of primary key to use for the query
      *
-     * @return    SystemEventInstanceMessageQuery The current query, for fluid interface
+     * @return SystemEventInstanceMessageQuery The current query, for fluid interface
      */
     public function filterByPrimaryKeys($keys)
     {
+
         return $this->addUsingAlias(SystemEventInstanceMessagePeer::ID, $keys, Criteria::IN);
     }
 
@@ -181,13 +251,14 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    SystemEventInstanceMessageQuery The current query, for fluid interface
+     * @return SystemEventInstanceMessageQuery The current query, for fluid interface
      */
     public function filterById($id = null, $comparison = null)
     {
         if (is_array($id) && null === $comparison) {
             $comparison = Criteria::IN;
         }
+
         return $this->addUsingAlias(SystemEventInstanceMessagePeer::ID, $id, $comparison);
     }
 
@@ -209,7 +280,7 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    SystemEventInstanceMessageQuery The current query, for fluid interface
+     * @return SystemEventInstanceMessageQuery The current query, for fluid interface
      */
     public function filterBySystemEventInstanceId($systemEventInstanceId = null, $comparison = null)
     {
@@ -230,6 +301,7 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
                 $comparison = Criteria::IN;
             }
         }
+
         return $this->addUsingAlias(SystemEventInstanceMessagePeer::SYSTEM_EVENT_INSTANCE_ID, $systemEventInstanceId, $comparison);
     }
 
@@ -251,7 +323,7 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    SystemEventInstanceMessageQuery The current query, for fluid interface
+     * @return SystemEventInstanceMessageQuery The current query, for fluid interface
      */
     public function filterBySystemEventSubscriptionId($systemEventSubscriptionId = null, $comparison = null)
     {
@@ -272,6 +344,7 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
                 $comparison = Criteria::IN;
             }
         }
+
         return $this->addUsingAlias(SystemEventInstanceMessagePeer::SYSTEM_EVENT_SUBSCRIPTION_ID, $systemEventSubscriptionId, $comparison);
     }
 
@@ -291,13 +364,14 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
      *              Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    SystemEventInstanceMessageQuery The current query, for fluid interface
+     * @return SystemEventInstanceMessageQuery The current query, for fluid interface
      */
     public function filterByReceived($received = null, $comparison = null)
     {
         if (is_string($received)) {
             $received = in_array(strtolower($received), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
         }
+
         return $this->addUsingAlias(SystemEventInstanceMessagePeer::RECEIVED, $received, $comparison);
     }
 
@@ -319,7 +393,7 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    SystemEventInstanceMessageQuery The current query, for fluid interface
+     * @return SystemEventInstanceMessageQuery The current query, for fluid interface
      */
     public function filterByReceivedAt($receivedAt = null, $comparison = null)
     {
@@ -340,6 +414,7 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
                 $comparison = Criteria::IN;
             }
         }
+
         return $this->addUsingAlias(SystemEventInstanceMessagePeer::RECEIVED_AT, $receivedAt, $comparison);
     }
 
@@ -356,7 +431,7 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
      *              Accepts wildcards (* and % trigger a LIKE)
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    SystemEventInstanceMessageQuery The current query, for fluid interface
+     * @return SystemEventInstanceMessageQuery The current query, for fluid interface
      */
     public function filterByStatusMessage($statusMessage = null, $comparison = null)
     {
@@ -368,6 +443,7 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
                 $comparison = Criteria::LIKE;
             }
         }
+
         return $this->addUsingAlias(SystemEventInstanceMessagePeer::STATUS_MESSAGE, $statusMessage, $comparison);
     }
 
@@ -389,7 +465,7 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    SystemEventInstanceMessageQuery The current query, for fluid interface
+     * @return SystemEventInstanceMessageQuery The current query, for fluid interface
      */
     public function filterByCreatedAt($createdAt = null, $comparison = null)
     {
@@ -410,6 +486,7 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
                 $comparison = Criteria::IN;
             }
         }
+
         return $this->addUsingAlias(SystemEventInstanceMessagePeer::CREATED_AT, $createdAt, $comparison);
     }
 
@@ -431,7 +508,7 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    SystemEventInstanceMessageQuery The current query, for fluid interface
+     * @return SystemEventInstanceMessageQuery The current query, for fluid interface
      */
     public function filterByUpdatedAt($updatedAt = null, $comparison = null)
     {
@@ -452,26 +529,29 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
                 $comparison = Criteria::IN;
             }
         }
+
         return $this->addUsingAlias(SystemEventInstanceMessagePeer::UPDATED_AT, $updatedAt, $comparison);
     }
 
     /**
      * Filter the query by a related SystemEventInstance object
      *
-     * @param     SystemEventInstance|PropelCollection $systemEventInstance The related object(s) to use as filter
+     * @param   SystemEventInstance|PropelObjectCollection $systemEventInstance The related object(s) to use as filter
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    SystemEventInstanceMessageQuery The current query, for fluid interface
+     * @return   SystemEventInstanceMessageQuery The current query, for fluid interface
+     * @throws   PropelException - if the provided filter is invalid.
      */
     public function filterBySystemEventInstance($systemEventInstance, $comparison = null)
     {
         if ($systemEventInstance instanceof SystemEventInstance) {
             return $this
                 ->addUsingAlias(SystemEventInstanceMessagePeer::SYSTEM_EVENT_INSTANCE_ID, $systemEventInstance->getId(), $comparison);
-        } elseif ($systemEventInstance instanceof PropelCollection) {
+        } elseif ($systemEventInstance instanceof PropelObjectCollection) {
             if (null === $comparison) {
                 $comparison = Criteria::IN;
             }
+
             return $this
                 ->addUsingAlias(SystemEventInstanceMessagePeer::SYSTEM_EVENT_INSTANCE_ID, $systemEventInstance->toKeyValue('PrimaryKey', 'Id'), $comparison);
         } else {
@@ -485,7 +565,7 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
      * @param     string $relationAlias optional alias for the relation
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    SystemEventInstanceMessageQuery The current query, for fluid interface
+     * @return SystemEventInstanceMessageQuery The current query, for fluid interface
      */
     public function joinSystemEventInstance($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
@@ -501,7 +581,7 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
         }
 
         // add the ModelJoin to the current object
-        if($relationAlias) {
+        if ($relationAlias) {
             $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
             $this->addJoinObject($join, $relationAlias);
         } else {
@@ -520,7 +600,7 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
      *                                   to be used as main alias in the secondary query
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    SystemEventInstanceQuery A secondary query class using the current class as primary query
+     * @return   SystemEventInstanceQuery A secondary query class using the current class as primary query
      */
     public function useSystemEventInstanceQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
@@ -532,20 +612,22 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
     /**
      * Filter the query by a related SystemEventSubscription object
      *
-     * @param     SystemEventSubscription|PropelCollection $systemEventSubscription The related object(s) to use as filter
+     * @param   SystemEventSubscription|PropelObjectCollection $systemEventSubscription The related object(s) to use as filter
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    SystemEventInstanceMessageQuery The current query, for fluid interface
+     * @return   SystemEventInstanceMessageQuery The current query, for fluid interface
+     * @throws   PropelException - if the provided filter is invalid.
      */
     public function filterBySystemEventSubscription($systemEventSubscription, $comparison = null)
     {
         if ($systemEventSubscription instanceof SystemEventSubscription) {
             return $this
                 ->addUsingAlias(SystemEventInstanceMessagePeer::SYSTEM_EVENT_SUBSCRIPTION_ID, $systemEventSubscription->getId(), $comparison);
-        } elseif ($systemEventSubscription instanceof PropelCollection) {
+        } elseif ($systemEventSubscription instanceof PropelObjectCollection) {
             if (null === $comparison) {
                 $comparison = Criteria::IN;
             }
+
             return $this
                 ->addUsingAlias(SystemEventInstanceMessagePeer::SYSTEM_EVENT_SUBSCRIPTION_ID, $systemEventSubscription->toKeyValue('PrimaryKey', 'Id'), $comparison);
         } else {
@@ -559,7 +641,7 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
      * @param     string $relationAlias optional alias for the relation
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    SystemEventInstanceMessageQuery The current query, for fluid interface
+     * @return SystemEventInstanceMessageQuery The current query, for fluid interface
      */
     public function joinSystemEventSubscription($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
@@ -575,7 +657,7 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
         }
 
         // add the ModelJoin to the current object
-        if($relationAlias) {
+        if ($relationAlias) {
             $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
             $this->addJoinObject($join, $relationAlias);
         } else {
@@ -594,7 +676,7 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
      *                                   to be used as main alias in the secondary query
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    SystemEventSubscriptionQuery A secondary query class using the current class as primary query
+     * @return   SystemEventSubscriptionQuery A secondary query class using the current class as primary query
      */
     public function useSystemEventSubscriptionQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
@@ -606,9 +688,9 @@ abstract class BaseSystemEventInstanceMessageQuery extends ModelCriteria
     /**
      * Exclude object from result
      *
-     * @param     SystemEventInstanceMessage $systemEventInstanceMessage Object to remove from the list of results
+     * @param   SystemEventInstanceMessage $systemEventInstanceMessage Object to remove from the list of results
      *
-     * @return    SystemEventInstanceMessageQuery The current query, for fluid interface
+     * @return SystemEventInstanceMessageQuery The current query, for fluid interface
      */
     public function prune($systemEventInstanceMessage = null)
     {

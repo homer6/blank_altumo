@@ -4,3 +4,4 @@ lib.model.schema.sql=propel
 plugins.sfAltumoPlugin.lib.model.schema.sql=propel
 plugins.sfGuardPlugin.lib.model..schema.sql=propel
 lib.model..schema.sql=propel
+plugins.sfGuardPlugin.lib.model.schema.sql=propel

@@ -17,59 +17,59 @@
 class SystemEventInstanceTableMap extends TableMap
 {
 
-	/**
-	 * The (dot-path) name of this class
-	 */
-	const CLASS_NAME = 'lib.model.map.SystemEventInstanceTableMap';
+    /**
+     * The (dot-path) name of this class
+     */
+    const CLASS_NAME = 'lib.model.map.SystemEventInstanceTableMap';
 
-	/**
-	 * Initialize the table attributes, columns and validators
-	 * Relations are not initialized by this method since they are lazy loaded
-	 *
-	 * @return     void
-	 * @throws     PropelException
-	 */
-	public function initialize()
-	{
-		// attributes
-		$this->setName('system_event_instance');
-		$this->setPhpName('SystemEventInstance');
-		$this->setClassname('SystemEventInstance');
-		$this->setPackage('lib.model');
-		$this->setUseIdGenerator(true);
-		// columns
-		$this->addPrimaryKey('ID', 'Id', 'INTEGER', true, null, null);
-		$this->addForeignKey('SYSTEM_EVENT_ID', 'SystemEventId', 'INTEGER', 'system_event', 'ID', true, null, null);
-		$this->addForeignKey('USER_ID', 'UserId', 'INTEGER', 'user', 'ID', false, null, null);
-		$this->addColumn('MESSAGE', 'Message', 'LONGVARCHAR', false, null, null);
-		$this->addColumn('CREATED_AT', 'CreatedAt', 'TIMESTAMP', false, null, null);
-		$this->addColumn('UPDATED_AT', 'UpdatedAt', 'TIMESTAMP', false, null, null);
-		// validators
-	} // initialize()
+    /**
+     * Initialize the table attributes, columns and validators
+     * Relations are not initialized by this method since they are lazy loaded
+     *
+     * @return void
+     * @throws PropelException
+     */
+    public function initialize()
+    {
+        // attributes
+        $this->setName('system_event_instance');
+        $this->setPhpName('SystemEventInstance');
+        $this->setClassname('SystemEventInstance');
+        $this->setPackage('lib.model');
+        $this->setUseIdGenerator(true);
+        // columns
+        $this->addPrimaryKey('ID', 'Id', 'INTEGER', true, null, null);
+        $this->addForeignKey('SYSTEM_EVENT_ID', 'SystemEventId', 'INTEGER', 'system_event', 'ID', true, null, null);
+        $this->addForeignKey('USER_ID', 'UserId', 'INTEGER', 'user', 'ID', false, null, null);
+        $this->addColumn('MESSAGE', 'Message', 'LONGVARCHAR', false, null, null);
+        $this->addColumn('CREATED_AT', 'CreatedAt', 'TIMESTAMP', false, null, null);
+        $this->addColumn('UPDATED_AT', 'UpdatedAt', 'TIMESTAMP', false, null, null);
+        // validators
+    } // initialize()
 
-	/**
-	 * Build the RelationMap objects for this table relationships
-	 */
-	public function buildRelations()
-	{
-		$this->addRelation('SystemEvent', 'SystemEvent', RelationMap::MANY_TO_ONE, array('system_event_id' => 'id', ), 'CASCADE', 'CASCADE');
-		$this->addRelation('User', 'User', RelationMap::MANY_TO_ONE, array('user_id' => 'id', ), 'CASCADE', 'CASCADE');
-		$this->addRelation('SystemEventInstanceMessage', 'SystemEventInstanceMessage', RelationMap::ONE_TO_MANY, array('id' => 'system_event_instance_id', ), 'CASCADE', 'CASCADE', 'SystemEventInstanceMessages');
-	} // buildRelations()
+    /**
+     * Build the RelationMap objects for this table relationships
+     */
+    public function buildRelations()
+    {
+        $this->addRelation('SystemEvent', 'SystemEvent', RelationMap::MANY_TO_ONE, array('system_event_id' => 'id', ), 'CASCADE', 'CASCADE');
+        $this->addRelation('User', 'User', RelationMap::MANY_TO_ONE, array('user_id' => 'id', ), 'CASCADE', 'CASCADE');
+        $this->addRelation('SystemEventInstanceMessage', 'SystemEventInstanceMessage', RelationMap::ONE_TO_MANY, array('id' => 'system_event_instance_id', ), 'CASCADE', 'CASCADE', 'SystemEventInstanceMessages');
+    } // buildRelations()
 
-	/**
-	 *
-	 * Gets the list of behaviors registered for this table
-	 *
-	 * @return array Associative array (name => parameters) of behaviors
-	 */
-	public function getBehaviors()
-	{
-		return array(
-			'symfony' => array('form' => 'true', 'filter' => 'true', ),
-			'symfony_behaviors' => array(),
-			'symfony_timestampable' => array('create_column' => 'created_at', 'update_column' => 'updated_at', ),
-		);
-	} // getBehaviors()
+    /**
+     *
+     * Gets the list of behaviors registered for this table
+     *
+     * @return array Associative array (name => parameters) of behaviors
+     */
+    public function getBehaviors()
+    {
+        return array(
+            'symfony' => array('form' => 'true', 'filter' => 'true', ),
+            'symfony_behaviors' => array(),
+            'symfony_timestampable' => array('create_column' => 'created_at', 'update_column' => 'updated_at', ),
+        );
+    } // getBehaviors()
 
 } // SystemEventInstanceTableMap

@@ -90,9 +90,9 @@ abstract class BaseUserQuery extends ModelCriteria
      * Returns a new UserQuery object.
      *
      * @param     string $modelAlias The alias of a model in the query
-     * @param     Criteria $criteria Optional Criteria to build the query from
+     * @param     UserQuery|Criteria $criteria Optional Criteria to build the query from
      *
-     * @return    UserQuery
+     * @return UserQuery
      */
     public static function create($modelAlias = null, $criteria = null)
     {
@@ -106,33 +106,95 @@ abstract class BaseUserQuery extends ModelCriteria
         if ($criteria instanceof Criteria) {
             $query->mergeWith($criteria);
         }
+
         return $query;
     }
 
     /**
-     * Find object by primary key
-     * Use instance pooling to avoid a database query if the object exists
+     * Find object by primary key.
+     * Propel uses the instance pool to skip the database if the object exists.
+     * Go fast if the query is untouched.
+     *
      * <code>
      * $obj  = $c->findPk(12, $con);
      * </code>
-     * @param     mixed $key Primary key to use for the query
+     *
+     * @param mixed $key Primary key to use for the query 
      * @param     PropelPDO $con an optional connection object
      *
-     * @return    User|array|mixed the result, formatted by the current formatter
+     * @return   User|User[]|mixed the result, formatted by the current formatter
      */
     public function findPk($key, $con = null)
     {
-        if ((null !== ($obj = UserPeer::getInstanceFromPool((string) $key))) && $this->getFormatter()->isObjectFormatter()) {
+        if ($key === null) {
+            return null;
+        }
+        if ((null !== ($obj = UserPeer::getInstanceFromPool((string) $key))) && !$this->formatter) {
             // the object is alredy in the instance pool
             return $obj;
-        } else {
-            // the object has not been requested yet, or the formatter is not an object formatter
-            $criteria = $this->isKeepQuery() ? clone $this : $this;
-            $stmt = $criteria
-                ->filterByPrimaryKey($key)
-                ->getSelectStatement($con);
-            return $criteria->getFormatter()->init($criteria)->formatOne($stmt);
         }
+        if ($con === null) {
+            $con = Propel::getConnection(UserPeer::DATABASE_NAME, Propel::CONNECTION_READ);
+        }
+        $this->basePreSelect($con);
+        if ($this->formatter || $this->modelAlias || $this->with || $this->select
+         || $this->selectColumns || $this->asColumns || $this->selectModifiers
+         || $this->map || $this->having || $this->joins) {
+            return $this->findPkComplex($key, $con);
+        } else {
+            return $this->findPkSimple($key, $con);
+        }
+    }
+
+    /**
+     * Find object by primary key using raw SQL to go fast.
+     * Bypass doSelect() and the object formatter by using generated code.
+     *
+     * @param     mixed $key Primary key to use for the query
+     * @param     PropelPDO $con A connection object
+     *
+     * @return   User A model object, or null if the key is not found
+     * @throws   PropelException
+     */
+    protected function findPkSimple($key, $con)
+    {
+        $sql = 'SELECT `ID`, `PASSWORD_RESET_KEY`, `SF_GUARD_USER_ID`, `CONTACT_ID`, `ACTIVE`, `CREATED_AT`, `UPDATED_AT` FROM `user` WHERE `ID` = :p0';
+        try {
+            $stmt = $con->prepare($sql);
+			$stmt->bindValue(':p0', $key, PDO::PARAM_INT);
+            $stmt->execute();
+        } catch (Exception $e) {
+            Propel::log($e->getMessage(), Propel::LOG_ERR);
+            throw new PropelException(sprintf('Unable to execute SELECT statement [%s]', $sql), $e);
+        }
+        $obj = null;
+        if ($row = $stmt->fetch(PDO::FETCH_NUM)) {
+            $obj = new User();
+            $obj->hydrate($row);
+            UserPeer::addInstanceToPool($obj, (string) $key);
+        }
+        $stmt->closeCursor();
+
+        return $obj;
+    }
+
+    /**
+     * Find object by primary key.
+     *
+     * @param     mixed $key Primary key to use for the query
+     * @param     PropelPDO $con A connection object
+     *
+     * @return User|User[]|mixed the result, formatted by the current formatter
+     */
+    protected function findPkComplex($key, $con)
+    {
+        // As the query uses a PK condition, no limit(1) is necessary.
+        $criteria = $this->isKeepQuery() ? clone $this : $this;
+        $stmt = $criteria
+            ->filterByPrimaryKey($key)
+            ->doSelect($con);
+
+        return $criteria->getFormatter()->init($criteria)->formatOne($stmt);
     }
 
     /**
@@ -143,14 +205,20 @@ abstract class BaseUserQuery extends ModelCriteria
      * @param     array $keys Primary keys to use for the query
      * @param     PropelPDO $con an optional connection object
      *
-     * @return    PropelObjectCollection|array|mixed the list of results, formatted by the current formatter
+     * @return PropelObjectCollection|User[]|mixed the list of results, formatted by the current formatter
      */
     public function findPks($keys, $con = null)
     {
+        if ($con === null) {
+            $con = Propel::getConnection($this->getDbName(), Propel::CONNECTION_READ);
+        }
+        $this->basePreSelect($con);
         $criteria = $this->isKeepQuery() ? clone $this : $this;
-        return $this
+        $stmt = $criteria
             ->filterByPrimaryKeys($keys)
-            ->find($con);
+            ->doSelect($con);
+
+        return $criteria->getFormatter()->init($criteria)->format($stmt);
     }
 
     /**
@@ -158,10 +226,11 @@ abstract class BaseUserQuery extends ModelCriteria
      *
      * @param     mixed $key Primary key to use for the query
      *
-     * @return    UserQuery The current query, for fluid interface
+     * @return UserQuery The current query, for fluid interface
      */
     public function filterByPrimaryKey($key)
     {
+
         return $this->addUsingAlias(UserPeer::ID, $key, Criteria::EQUAL);
     }
 
@@ -170,10 +239,11 @@ abstract class BaseUserQuery extends ModelCriteria
      *
      * @param     array $keys The list of primary key to use for the query
      *
-     * @return    UserQuery The current query, for fluid interface
+     * @return UserQuery The current query, for fluid interface
      */
     public function filterByPrimaryKeys($keys)
     {
+
         return $this->addUsingAlias(UserPeer::ID, $keys, Criteria::IN);
     }
 
@@ -193,13 +263,14 @@ abstract class BaseUserQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    UserQuery The current query, for fluid interface
+     * @return UserQuery The current query, for fluid interface
      */
     public function filterById($id = null, $comparison = null)
     {
         if (is_array($id) && null === $comparison) {
             $comparison = Criteria::IN;
         }
+
         return $this->addUsingAlias(UserPeer::ID, $id, $comparison);
     }
 
@@ -216,7 +287,7 @@ abstract class BaseUserQuery extends ModelCriteria
      *              Accepts wildcards (* and % trigger a LIKE)
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    UserQuery The current query, for fluid interface
+     * @return UserQuery The current query, for fluid interface
      */
     public function filterByPasswordResetKey($passwordResetKey = null, $comparison = null)
     {
@@ -228,6 +299,7 @@ abstract class BaseUserQuery extends ModelCriteria
                 $comparison = Criteria::LIKE;
             }
         }
+
         return $this->addUsingAlias(UserPeer::PASSWORD_RESET_KEY, $passwordResetKey, $comparison);
     }
 
@@ -249,7 +321,7 @@ abstract class BaseUserQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    UserQuery The current query, for fluid interface
+     * @return UserQuery The current query, for fluid interface
      */
     public function filterBySfGuardUserId($sfGuardUserId = null, $comparison = null)
     {
@@ -270,6 +342,7 @@ abstract class BaseUserQuery extends ModelCriteria
                 $comparison = Criteria::IN;
             }
         }
+
         return $this->addUsingAlias(UserPeer::SF_GUARD_USER_ID, $sfGuardUserId, $comparison);
     }
 
@@ -291,7 +364,7 @@ abstract class BaseUserQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    UserQuery The current query, for fluid interface
+     * @return UserQuery The current query, for fluid interface
      */
     public function filterByContactId($contactId = null, $comparison = null)
     {
@@ -312,6 +385,7 @@ abstract class BaseUserQuery extends ModelCriteria
                 $comparison = Criteria::IN;
             }
         }
+
         return $this->addUsingAlias(UserPeer::CONTACT_ID, $contactId, $comparison);
     }
 
@@ -331,13 +405,14 @@ abstract class BaseUserQuery extends ModelCriteria
      *              Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    UserQuery The current query, for fluid interface
+     * @return UserQuery The current query, for fluid interface
      */
     public function filterByActive($active = null, $comparison = null)
     {
         if (is_string($active)) {
             $active = in_array(strtolower($active), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
         }
+
         return $this->addUsingAlias(UserPeer::ACTIVE, $active, $comparison);
     }
 
@@ -359,7 +434,7 @@ abstract class BaseUserQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    UserQuery The current query, for fluid interface
+     * @return UserQuery The current query, for fluid interface
      */
     public function filterByCreatedAt($createdAt = null, $comparison = null)
     {
@@ -380,6 +455,7 @@ abstract class BaseUserQuery extends ModelCriteria
                 $comparison = Criteria::IN;
             }
         }
+
         return $this->addUsingAlias(UserPeer::CREATED_AT, $createdAt, $comparison);
     }
 
@@ -401,7 +477,7 @@ abstract class BaseUserQuery extends ModelCriteria
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    UserQuery The current query, for fluid interface
+     * @return UserQuery The current query, for fluid interface
      */
     public function filterByUpdatedAt($updatedAt = null, $comparison = null)
     {
@@ -422,26 +498,29 @@ abstract class BaseUserQuery extends ModelCriteria
                 $comparison = Criteria::IN;
             }
         }
+
         return $this->addUsingAlias(UserPeer::UPDATED_AT, $updatedAt, $comparison);
     }
 
     /**
      * Filter the query by a related Contact object
      *
-     * @param     Contact|PropelCollection $contact The related object(s) to use as filter
+     * @param   Contact|PropelObjectCollection $contact The related object(s) to use as filter
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    UserQuery The current query, for fluid interface
+     * @return   UserQuery The current query, for fluid interface
+     * @throws   PropelException - if the provided filter is invalid.
      */
     public function filterByContact($contact, $comparison = null)
     {
         if ($contact instanceof Contact) {
             return $this
                 ->addUsingAlias(UserPeer::CONTACT_ID, $contact->getId(), $comparison);
-        } elseif ($contact instanceof PropelCollection) {
+        } elseif ($contact instanceof PropelObjectCollection) {
             if (null === $comparison) {
                 $comparison = Criteria::IN;
             }
+
             return $this
                 ->addUsingAlias(UserPeer::CONTACT_ID, $contact->toKeyValue('PrimaryKey', 'Id'), $comparison);
         } else {
@@ -455,7 +534,7 @@ abstract class BaseUserQuery extends ModelCriteria
      * @param     string $relationAlias optional alias for the relation
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    UserQuery The current query, for fluid interface
+     * @return UserQuery The current query, for fluid interface
      */
     public function joinContact($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
     {
@@ -471,7 +550,7 @@ abstract class BaseUserQuery extends ModelCriteria
         }
 
         // add the ModelJoin to the current object
-        if($relationAlias) {
+        if ($relationAlias) {
             $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
             $this->addJoinObject($join, $relationAlias);
         } else {
@@ -490,7 +569,7 @@ abstract class BaseUserQuery extends ModelCriteria
      *                                   to be used as main alias in the secondary query
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    ContactQuery A secondary query class using the current class as primary query
+     * @return   ContactQuery A secondary query class using the current class as primary query
      */
     public function useContactQuery($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
     {
@@ -502,20 +581,22 @@ abstract class BaseUserQuery extends ModelCriteria
     /**
      * Filter the query by a related sfGuardUser object
      *
-     * @param     sfGuardUser|PropelCollection $sfGuardUser The related object(s) to use as filter
+     * @param   sfGuardUser|PropelObjectCollection $sfGuardUser The related object(s) to use as filter
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    UserQuery The current query, for fluid interface
+     * @return   UserQuery The current query, for fluid interface
+     * @throws   PropelException - if the provided filter is invalid.
      */
     public function filterBysfGuardUser($sfGuardUser, $comparison = null)
     {
         if ($sfGuardUser instanceof sfGuardUser) {
             return $this
                 ->addUsingAlias(UserPeer::SF_GUARD_USER_ID, $sfGuardUser->getId(), $comparison);
-        } elseif ($sfGuardUser instanceof PropelCollection) {
+        } elseif ($sfGuardUser instanceof PropelObjectCollection) {
             if (null === $comparison) {
                 $comparison = Criteria::IN;
             }
+
             return $this
                 ->addUsingAlias(UserPeer::SF_GUARD_USER_ID, $sfGuardUser->toKeyValue('PrimaryKey', 'Id'), $comparison);
         } else {
@@ -529,7 +610,7 @@ abstract class BaseUserQuery extends ModelCriteria
      * @param     string $relationAlias optional alias for the relation
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    UserQuery The current query, for fluid interface
+     * @return UserQuery The current query, for fluid interface
      */
     public function joinsfGuardUser($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
@@ -545,7 +626,7 @@ abstract class BaseUserQuery extends ModelCriteria
         }
 
         // add the ModelJoin to the current object
-        if($relationAlias) {
+        if ($relationAlias) {
             $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
             $this->addJoinObject($join, $relationAlias);
         } else {
@@ -564,7 +645,7 @@ abstract class BaseUserQuery extends ModelCriteria
      *                                   to be used as main alias in the secondary query
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    sfGuardUserQuery A secondary query class using the current class as primary query
+     * @return   sfGuardUserQuery A secondary query class using the current class as primary query
      */
     public function usesfGuardUserQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
@@ -576,17 +657,18 @@ abstract class BaseUserQuery extends ModelCriteria
     /**
      * Filter the query by a related Session object
      *
-     * @param     Session $session  the related object to use as filter
+     * @param   Session|PropelObjectCollection $session  the related object to use as filter
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    UserQuery The current query, for fluid interface
+     * @return   UserQuery The current query, for fluid interface
+     * @throws   PropelException - if the provided filter is invalid.
      */
     public function filterBySession($session, $comparison = null)
     {
         if ($session instanceof Session) {
             return $this
                 ->addUsingAlias(UserPeer::ID, $session->getUserId(), $comparison);
-        } elseif ($session instanceof PropelCollection) {
+        } elseif ($session instanceof PropelObjectCollection) {
             return $this
                 ->useSessionQuery()
                 ->filterByPrimaryKeys($session->getPrimaryKeys())
@@ -602,7 +684,7 @@ abstract class BaseUserQuery extends ModelCriteria
      * @param     string $relationAlias optional alias for the relation
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    UserQuery The current query, for fluid interface
+     * @return UserQuery The current query, for fluid interface
      */
     public function joinSession($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
     {
@@ -618,7 +700,7 @@ abstract class BaseUserQuery extends ModelCriteria
         }
 
         // add the ModelJoin to the current object
-        if($relationAlias) {
+        if ($relationAlias) {
             $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
             $this->addJoinObject($join, $relationAlias);
         } else {
@@ -637,7 +719,7 @@ abstract class BaseUserQuery extends ModelCriteria
      *                                   to be used as main alias in the secondary query
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    SessionQuery A secondary query class using the current class as primary query
+     * @return   SessionQuery A secondary query class using the current class as primary query
      */
     public function useSessionQuery($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
     {
@@ -649,17 +731,18 @@ abstract class BaseUserQuery extends ModelCriteria
     /**
      * Filter the query by a related SingleSignOnKey object
      *
-     * @param     SingleSignOnKey $singleSignOnKey  the related object to use as filter
+     * @param   SingleSignOnKey|PropelObjectCollection $singleSignOnKey  the related object to use as filter
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    UserQuery The current query, for fluid interface
+     * @return   UserQuery The current query, for fluid interface
+     * @throws   PropelException - if the provided filter is invalid.
      */
     public function filterBySingleSignOnKey($singleSignOnKey, $comparison = null)
     {
         if ($singleSignOnKey instanceof SingleSignOnKey) {
             return $this
                 ->addUsingAlias(UserPeer::ID, $singleSignOnKey->getUserId(), $comparison);
-        } elseif ($singleSignOnKey instanceof PropelCollection) {
+        } elseif ($singleSignOnKey instanceof PropelObjectCollection) {
             return $this
                 ->useSingleSignOnKeyQuery()
                 ->filterByPrimaryKeys($singleSignOnKey->getPrimaryKeys())
@@ -675,7 +758,7 @@ abstract class BaseUserQuery extends ModelCriteria
      * @param     string $relationAlias optional alias for the relation
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    UserQuery The current query, for fluid interface
+     * @return UserQuery The current query, for fluid interface
      */
     public function joinSingleSignOnKey($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
@@ -691,7 +774,7 @@ abstract class BaseUserQuery extends ModelCriteria
         }
 
         // add the ModelJoin to the current object
-        if($relationAlias) {
+        if ($relationAlias) {
             $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
             $this->addJoinObject($join, $relationAlias);
         } else {
@@ -710,7 +793,7 @@ abstract class BaseUserQuery extends ModelCriteria
      *                                   to be used as main alias in the secondary query
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    SingleSignOnKeyQuery A secondary query class using the current class as primary query
+     * @return   SingleSignOnKeyQuery A secondary query class using the current class as primary query
      */
     public function useSingleSignOnKeyQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
@@ -722,17 +805,18 @@ abstract class BaseUserQuery extends ModelCriteria
     /**
      * Filter the query by a related SystemEventSubscription object
      *
-     * @param     SystemEventSubscription $systemEventSubscription  the related object to use as filter
+     * @param   SystemEventSubscription|PropelObjectCollection $systemEventSubscription  the related object to use as filter
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    UserQuery The current query, for fluid interface
+     * @return   UserQuery The current query, for fluid interface
+     * @throws   PropelException - if the provided filter is invalid.
      */
     public function filterBySystemEventSubscription($systemEventSubscription, $comparison = null)
     {
         if ($systemEventSubscription instanceof SystemEventSubscription) {
             return $this
                 ->addUsingAlias(UserPeer::ID, $systemEventSubscription->getUserId(), $comparison);
-        } elseif ($systemEventSubscription instanceof PropelCollection) {
+        } elseif ($systemEventSubscription instanceof PropelObjectCollection) {
             return $this
                 ->useSystemEventSubscriptionQuery()
                 ->filterByPrimaryKeys($systemEventSubscription->getPrimaryKeys())
@@ -748,7 +832,7 @@ abstract class BaseUserQuery extends ModelCriteria
      * @param     string $relationAlias optional alias for the relation
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    UserQuery The current query, for fluid interface
+     * @return UserQuery The current query, for fluid interface
      */
     public function joinSystemEventSubscription($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
@@ -764,7 +848,7 @@ abstract class BaseUserQuery extends ModelCriteria
         }
 
         // add the ModelJoin to the current object
-        if($relationAlias) {
+        if ($relationAlias) {
             $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
             $this->addJoinObject($join, $relationAlias);
         } else {
@@ -783,7 +867,7 @@ abstract class BaseUserQuery extends ModelCriteria
      *                                   to be used as main alias in the secondary query
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    SystemEventSubscriptionQuery A secondary query class using the current class as primary query
+     * @return   SystemEventSubscriptionQuery A secondary query class using the current class as primary query
      */
     public function useSystemEventSubscriptionQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
     {
@@ -795,17 +879,18 @@ abstract class BaseUserQuery extends ModelCriteria
     /**
      * Filter the query by a related SystemEventInstance object
      *
-     * @param     SystemEventInstance $systemEventInstance  the related object to use as filter
+     * @param   SystemEventInstance|PropelObjectCollection $systemEventInstance  the related object to use as filter
      * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return    UserQuery The current query, for fluid interface
+     * @return   UserQuery The current query, for fluid interface
+     * @throws   PropelException - if the provided filter is invalid.
      */
     public function filterBySystemEventInstance($systemEventInstance, $comparison = null)
     {
         if ($systemEventInstance instanceof SystemEventInstance) {
             return $this
                 ->addUsingAlias(UserPeer::ID, $systemEventInstance->getUserId(), $comparison);
-        } elseif ($systemEventInstance instanceof PropelCollection) {
+        } elseif ($systemEventInstance instanceof PropelObjectCollection) {
             return $this
                 ->useSystemEventInstanceQuery()
                 ->filterByPrimaryKeys($systemEventInstance->getPrimaryKeys())
@@ -821,7 +906,7 @@ abstract class BaseUserQuery extends ModelCriteria
      * @param     string $relationAlias optional alias for the relation
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    UserQuery The current query, for fluid interface
+     * @return UserQuery The current query, for fluid interface
      */
     public function joinSystemEventInstance($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
     {
@@ -837,7 +922,7 @@ abstract class BaseUserQuery extends ModelCriteria
         }
 
         // add the ModelJoin to the current object
-        if($relationAlias) {
+        if ($relationAlias) {
             $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
             $this->addJoinObject($join, $relationAlias);
         } else {
@@ -856,7 +941,7 @@ abstract class BaseUserQuery extends ModelCriteria
      *                                   to be used as main alias in the secondary query
      * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return    SystemEventInstanceQuery A secondary query class using the current class as primary query
+     * @return   SystemEventInstanceQuery A secondary query class using the current class as primary query
      */
     public function useSystemEventInstanceQuery($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
     {
@@ -868,9 +953,9 @@ abstract class BaseUserQuery extends ModelCriteria
     /**
      * Exclude object from result
      *
-     * @param     User $user Object to remove from the list of results
+     * @param   User $user Object to remove from the list of results
      *
-     * @return    UserQuery The current query, for fluid interface
+     * @return UserQuery The current query, for fluid interface
      */
     public function prune($user = null)
     {

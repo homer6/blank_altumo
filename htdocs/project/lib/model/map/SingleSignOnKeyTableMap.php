@@ -17,60 +17,60 @@
 class SingleSignOnKeyTableMap extends TableMap
 {
 
-	/**
-	 * The (dot-path) name of this class
-	 */
-	const CLASS_NAME = 'lib.model.map.SingleSignOnKeyTableMap';
+    /**
+     * The (dot-path) name of this class
+     */
+    const CLASS_NAME = 'lib.model.map.SingleSignOnKeyTableMap';
 
-	/**
-	 * Initialize the table attributes, columns and validators
-	 * Relations are not initialized by this method since they are lazy loaded
-	 *
-	 * @return     void
-	 * @throws     PropelException
-	 */
-	public function initialize()
-	{
-		// attributes
-		$this->setName('single_sign_on_key');
-		$this->setPhpName('SingleSignOnKey');
-		$this->setClassname('SingleSignOnKey');
-		$this->setPackage('lib.model');
-		$this->setUseIdGenerator(true);
-		// columns
-		$this->addPrimaryKey('ID', 'Id', 'INTEGER', true, null, null);
-		$this->addColumn('SECRET', 'Secret', 'VARCHAR', true, 32, null);
-		$this->addColumn('USED', 'Used', 'BOOLEAN', true, 1, false);
-		$this->addForeignKey('SESSION_ID', 'SessionId', 'INTEGER', 'session', 'ID', false, null, null);
-		$this->addForeignKey('USER_ID', 'UserId', 'INTEGER', 'user', 'ID', true, null, null);
-		$this->addColumn('VALID_FOR_MINUTES', 'ValidForMinutes', 'INTEGER', true, null, 1440);
-		$this->addColumn('CREATED_AT', 'CreatedAt', 'TIMESTAMP', false, null, null);
-		$this->addColumn('UPDATED_AT', 'UpdatedAt', 'TIMESTAMP', false, null, null);
-		// validators
-	} // initialize()
+    /**
+     * Initialize the table attributes, columns and validators
+     * Relations are not initialized by this method since they are lazy loaded
+     *
+     * @return void
+     * @throws PropelException
+     */
+    public function initialize()
+    {
+        // attributes
+        $this->setName('single_sign_on_key');
+        $this->setPhpName('SingleSignOnKey');
+        $this->setClassname('SingleSignOnKey');
+        $this->setPackage('lib.model');
+        $this->setUseIdGenerator(true);
+        // columns
+        $this->addPrimaryKey('ID', 'Id', 'INTEGER', true, null, null);
+        $this->addColumn('SECRET', 'Secret', 'VARCHAR', true, 32, null);
+        $this->addColumn('USED', 'Used', 'BOOLEAN', true, 1, false);
+        $this->addForeignKey('SESSION_ID', 'SessionId', 'INTEGER', 'session', 'ID', false, null, null);
+        $this->addForeignKey('USER_ID', 'UserId', 'INTEGER', 'user', 'ID', true, null, null);
+        $this->addColumn('VALID_FOR_MINUTES', 'ValidForMinutes', 'INTEGER', true, null, 1440);
+        $this->addColumn('CREATED_AT', 'CreatedAt', 'TIMESTAMP', false, null, null);
+        $this->addColumn('UPDATED_AT', 'UpdatedAt', 'TIMESTAMP', false, null, null);
+        // validators
+    } // initialize()
 
-	/**
-	 * Build the RelationMap objects for this table relationships
-	 */
-	public function buildRelations()
-	{
-		$this->addRelation('Session', 'Session', RelationMap::MANY_TO_ONE, array('session_id' => 'id', ), 'CASCADE', null);
-		$this->addRelation('User', 'User', RelationMap::MANY_TO_ONE, array('user_id' => 'id', ), 'CASCADE', null);
-	} // buildRelations()
+    /**
+     * Build the RelationMap objects for this table relationships
+     */
+    public function buildRelations()
+    {
+        $this->addRelation('Session', 'Session', RelationMap::MANY_TO_ONE, array('session_id' => 'id', ), 'CASCADE', null);
+        $this->addRelation('User', 'User', RelationMap::MANY_TO_ONE, array('user_id' => 'id', ), 'CASCADE', null);
+    } // buildRelations()
 
-	/**
-	 *
-	 * Gets the list of behaviors registered for this table
-	 *
-	 * @return array Associative array (name => parameters) of behaviors
-	 */
-	public function getBehaviors()
-	{
-		return array(
-			'symfony' => array('form' => 'true', 'filter' => 'true', ),
-			'symfony_behaviors' => array(),
-			'symfony_timestampable' => array('create_column' => 'created_at', 'update_column' => 'updated_at', ),
-		);
-	} // getBehaviors()
+    /**
+     *
+     * Gets the list of behaviors registered for this table
+     *
+     * @return array Associative array (name => parameters) of behaviors
+     */
+    public function getBehaviors()
+    {
+        return array(
+            'symfony' => array('form' => 'true', 'filter' => 'true', ),
+            'symfony_behaviors' => array(),
+            'symfony_timestampable' => array('create_column' => 'created_at', 'update_column' => 'updated_at', ),
+        );
+    } // getBehaviors()
 
 } // SingleSignOnKeyTableMap
