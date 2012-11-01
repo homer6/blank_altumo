@@ -6,4 +6,4 @@
 	url = git://github.com/propelorm/sfPropelORMPlugin.git
 [submodule "htdocs/project/lib/vendor/symfony"]
 	path = htdocs/project/lib/vendor/symfony
-	url = git://github.com/zedola/symfony1.git
+	url = git://github.com/thatjuan/symfony1.git
