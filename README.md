@@ -24,7 +24,7 @@ Dependencies
 Installation
 ------------
 
-   - git clone -o blank_altumo git://github.com/homer6/blank_altumo.git my-new-project-name
+   - git clone -o blank_altumo git://github.com/altumo/blank_altumo.git my-new-project-name
    - cd my-new-project-name
    - git submodule update --init --recursive
    - cd htdocs/project
