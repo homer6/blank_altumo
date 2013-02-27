@@ -7,24 +7,24 @@
       */
 SET @@foreign_key_checks = 0;
 
-ALTER TABLE `altumo_com`.`session` DROP FOREIGN KEY `session_FK_1`;
+ALTER TABLE `session` DROP FOREIGN KEY `session_FK_1`;
 
-ALTER TABLE `altumo_com`.`single_sign_on_key` DROP FOREIGN KEY `single_sign_on_key_FK_1`;
+ALTER TABLE `single_sign_on_key` DROP FOREIGN KEY `single_sign_on_key_FK_1`;
 
-ALTER TABLE `altumo_com`.`system_event_instance` DROP FOREIGN KEY `system_event_instance_FK_1`;
+ALTER TABLE `system_event_instance` DROP FOREIGN KEY `system_event_instance_FK_1`;
 
-ALTER TABLE `altumo_com`.`system_event_instance` DROP FOREIGN KEY `system_event_instance_FK_2`;
+ALTER TABLE `system_event_instance` DROP FOREIGN KEY `system_event_instance_FK_2`;
 
-ALTER TABLE `altumo_com`.`system_event_instance_message` DROP FOREIGN KEY `system_event_instance_message_FK_1`;
+ALTER TABLE `system_event_instance_message` DROP FOREIGN KEY `system_event_instance_message_FK_1`;
 
-ALTER TABLE `altumo_com`.`system_event_instance_message` DROP FOREIGN KEY `system_event_instance_message_FK_2`;
+ALTER TABLE `system_event_instance_message` DROP FOREIGN KEY `system_event_instance_message_FK_2`;
 
-ALTER TABLE `altumo_com`.`system_event_subscription` DROP FOREIGN KEY `system_event_subscription_FK_1`;
+ALTER TABLE `system_event_subscription` DROP FOREIGN KEY `system_event_subscription_FK_1`;
 
-ALTER TABLE `altumo_com`.`system_event_subscription` DROP FOREIGN KEY `system_event_subscription_FK_2`;
+ALTER TABLE `system_event_subscription` DROP FOREIGN KEY `system_event_subscription_FK_2`;
 
 /* Header line. Object: contact. Script date: 10/28/2012 10:40:33 AM. */
-CREATE TABLE `altumo_com`.`contact` (
+CREATE TABLE `contact` (
 	`id` int(11) NOT NULL auto_increment,
 	`first_name` varchar(64) default NULL,
 	`last_name` varchar(64) default NULL,
@@ -54,7 +54,7 @@ ROW_FORMAT = Compact
 ;
 
 /* Header line. Object: country. Script date: 10/28/2012 10:40:33 AM. */
-CREATE TABLE `altumo_com`.`country` (
+CREATE TABLE `country` (
 	`id` int(11) NOT NULL auto_increment,
 	`name` varchar(64) NOT NULL,
 	`iso_code` varchar(12) NOT NULL,
@@ -76,7 +76,7 @@ ROW_FORMAT = Compact
 ;
 
 /* Header line. Object: currency. Script date: 10/28/2012 10:40:33 AM. */
-CREATE TABLE `altumo_com`.`currency` (
+CREATE TABLE `currency` (
 	`id` int(11) NOT NULL auto_increment,
 	`name` varchar(64) NOT NULL,
 	`iso_code` varchar(3) NOT NULL,
@@ -91,9 +91,9 @@ ROW_FORMAT = Compact
 ;
 
 /* Header line. Object: session. Script date: 10/28/2012 10:40:33 AM. */
-DROP TABLE IF EXISTS `altumo_com`.`_temp_session`;
+DROP TABLE IF EXISTS `_temp_session`;
 
-CREATE TABLE `altumo_com`.`_temp_session` (
+CREATE TABLE `_temp_session` (
 	`id` int(11) NOT NULL auto_increment,
 	`session_key` varchar(32) NOT NULL,
 	`data` longblob default NULL,
@@ -112,18 +112,18 @@ AUTO_INCREMENT = 1
 ROW_FORMAT = Compact
 ;
 
-INSERT INTO `altumo_com`.`_temp_session`
+INSERT INTO `_temp_session`
 ( `client_ip_address`, `data`, `id`, `session_key`, `session_type`, `time` )
 SELECT
 `client_ip_address`, `data`, `id`, `session_key`, `session_type`, `time`
-FROM `altumo_com`.`session`;
+FROM `session`;
 
-DROP TABLE `altumo_com`.`session`;
+DROP TABLE `session`;
 
-ALTER TABLE `altumo_com`.`_temp_session` RENAME `session`;
+ALTER TABLE `_temp_session` RENAME `session`;
 
 /* Header line. Object: sf_guard_group. Script date: 10/28/2012 10:40:33 AM. */
-CREATE TABLE `altumo_com`.`sf_guard_group` (
+CREATE TABLE `sf_guard_group` (
 	`id` int(11) NOT NULL auto_increment,
 	`name` varchar(255) NOT NULL,
 	`description` text default NULL,
@@ -138,7 +138,7 @@ ROW_FORMAT = Compact
 ;
 
 /* Header line. Object: sf_guard_group_permission. Script date: 10/28/2012 10:40:33 AM. */
-CREATE TABLE `altumo_com`.`sf_guard_group_permission` (
+CREATE TABLE `sf_guard_group_permission` (
 	`group_id` int(11) NOT NULL,
 	`permission_id` int(11) NOT NULL,
 	PRIMARY KEY  ( `group_id`, `permission_id` ),
@@ -151,7 +151,7 @@ ROW_FORMAT = Compact
 ;
 
 /* Header line. Object: sf_guard_permission. Script date: 10/28/2012 10:40:33 AM. */
-CREATE TABLE `altumo_com`.`sf_guard_permission` (
+CREATE TABLE `sf_guard_permission` (
 	`id` int(11) NOT NULL auto_increment,
 	`name` varchar(255) NOT NULL,
 	`description` text default NULL,
@@ -166,7 +166,7 @@ ROW_FORMAT = Compact
 ;
 
 /* Header line. Object: sf_guard_remember_key. Script date: 10/28/2012 10:40:33 AM. */
-CREATE TABLE `altumo_com`.`sf_guard_remember_key` (
+CREATE TABLE `sf_guard_remember_key` (
 	`user_id` int(11) NOT NULL,
 	`remember_key` varchar(32) default NULL,
 	`ip_address` varchar(50) NOT NULL,
@@ -180,7 +180,7 @@ ROW_FORMAT = Compact
 ;
 
 /* Header line. Object: sf_guard_user. Script date: 10/28/2012 10:40:33 AM. */
-CREATE TABLE `altumo_com`.`sf_guard_user` (
+CREATE TABLE `sf_guard_user` (
 	`id` int(11) NOT NULL auto_increment,
 	`username` varchar(128) NOT NULL,
 	`algorithm` varchar(128) NOT NULL default 'sha1',
@@ -201,7 +201,7 @@ ROW_FORMAT = Compact
 ;
 
 /* Header line. Object: sf_guard_user_group. Script date: 10/28/2012 10:40:33 AM. */
-CREATE TABLE `altumo_com`.`sf_guard_user_group` (
+CREATE TABLE `sf_guard_user_group` (
 	`user_id` int(11) NOT NULL,
 	`group_id` int(11) NOT NULL,
 	PRIMARY KEY  ( `user_id`, `group_id` ),
@@ -214,7 +214,7 @@ ROW_FORMAT = Compact
 ;
 
 /* Header line. Object: sf_guard_user_permission. Script date: 10/28/2012 10:40:33 AM. */
-CREATE TABLE `altumo_com`.`sf_guard_user_permission` (
+CREATE TABLE `sf_guard_user_permission` (
 	`user_id` int(11) NOT NULL,
 	`permission_id` int(11) NOT NULL,
 	PRIMARY KEY  ( `user_id`, `permission_id` ),
@@ -227,9 +227,9 @@ ROW_FORMAT = Compact
 ;
 
 /* Header line. Object: single_sign_on_key. Script date: 10/28/2012 10:40:33 AM. */
-DROP TABLE IF EXISTS `altumo_com`.`_temp_single_sign_on_key`;
+DROP TABLE IF EXISTS `_temp_single_sign_on_key`;
 
-CREATE TABLE `altumo_com`.`_temp_single_sign_on_key` (
+CREATE TABLE `_temp_single_sign_on_key` (
 	`id` int(11) NOT NULL auto_increment,
 	`secret` varchar(32) NOT NULL,
 	`used` tinyint(4) NOT NULL default '0',
@@ -250,18 +250,18 @@ AUTO_INCREMENT = 1
 ROW_FORMAT = Compact
 ;
 
-INSERT INTO `altumo_com`.`_temp_single_sign_on_key`
+INSERT INTO `_temp_single_sign_on_key`
 ( `created_at`, `id`, `secret`, `session_id`, `updated_at`, `used`, `valid_for_minutes` )
 SELECT
 `created_at`, `id`, `secret`, `session_id`, `updated_at`, `used`, `valid_for_minutes`
-FROM `altumo_com`.`single_sign_on_key`;
+FROM `single_sign_on_key`;
 
-DROP TABLE `altumo_com`.`single_sign_on_key`;
+DROP TABLE `single_sign_on_key`;
 
-ALTER TABLE `altumo_com`.`_temp_single_sign_on_key` RENAME `single_sign_on_key`;
+ALTER TABLE `_temp_single_sign_on_key` RENAME `single_sign_on_key`;
 
 /* Header line. Object: state. Script date: 10/28/2012 10:40:33 AM. */
-CREATE TABLE `altumo_com`.`state` (
+CREATE TABLE `state` (
 	`id` int(11) NOT NULL auto_increment,
 	`name` varchar(64) NOT NULL,
 	`iso_code` varchar(12) NOT NULL,
@@ -285,9 +285,9 @@ ROW_FORMAT = Compact
 ;
 
 /* Header line. Object: system_event. Script date: 10/28/2012 10:40:33 AM. */
-DROP TABLE IF EXISTS `altumo_com`.`_temp_system_event`;
+DROP TABLE IF EXISTS `_temp_system_event`;
 
-CREATE TABLE `altumo_com`.`_temp_system_event` (
+CREATE TABLE `_temp_system_event` (
 	`id` int(11) NOT NULL auto_increment,
 	`name` varchar(64) NOT NULL,
 	`unique_key` varchar(64) NOT NULL,
@@ -308,20 +308,20 @@ AUTO_INCREMENT = 1
 ROW_FORMAT = Compact
 ;
 
-INSERT INTO `altumo_com`.`_temp_system_event`
+INSERT INTO `_temp_system_event`
 ( `created_at`, `enabled`, `id`, `name`, `slug`, `unique_key`, `updated_at` )
 SELECT
 `created_at`, `enabled`, `id`, `name`, `slug`, `unique_key`, `updated_at`
-FROM `altumo_com`.`system_event`;
+FROM `system_event`;
 
-DROP TABLE `altumo_com`.`system_event`;
+DROP TABLE `system_event`;
 
-ALTER TABLE `altumo_com`.`_temp_system_event` RENAME `system_event`;
+ALTER TABLE `_temp_system_event` RENAME `system_event`;
 
 /* Header line. Object: system_event_instance. Script date: 10/28/2012 10:40:33 AM. */
-DROP TABLE IF EXISTS `altumo_com`.`_temp_system_event_instance`;
+DROP TABLE IF EXISTS `_temp_system_event_instance`;
 
-CREATE TABLE `altumo_com`.`_temp_system_event_instance` (
+CREATE TABLE `_temp_system_event_instance` (
 	`id` int(11) NOT NULL auto_increment,
 	`system_event_id` int(11) NOT NULL,
 	`message` text default NULL,
@@ -337,20 +337,20 @@ AUTO_INCREMENT = 1
 ROW_FORMAT = Compact
 ;
 
-INSERT INTO `altumo_com`.`_temp_system_event_instance`
+INSERT INTO `_temp_system_event_instance`
 ( `created_at`, `id`, `message`, `system_event_id`, `updated_at` )
 SELECT
 `created_at`, `id`, `message`, `system_event_id`, `updated_at`
-FROM `altumo_com`.`system_event_instance`;
+FROM `system_event_instance`;
 
-DROP TABLE `altumo_com`.`system_event_instance`;
+DROP TABLE `system_event_instance`;
 
-ALTER TABLE `altumo_com`.`_temp_system_event_instance` RENAME `system_event_instance`;
+ALTER TABLE `_temp_system_event_instance` RENAME `system_event_instance`;
 
 /* Header line. Object: system_event_instance_message. Script date: 10/28/2012 10:40:33 AM. */
-DROP TABLE IF EXISTS `altumo_com`.`_temp_system_event_instance_message`;
+DROP TABLE IF EXISTS `_temp_system_event_instance_message`;
 
-CREATE TABLE `altumo_com`.`_temp_system_event_instance_message` (
+CREATE TABLE `_temp_system_event_instance_message` (
 	`id` int(11) NOT NULL auto_increment,
 	`system_event_instance_id` int(11) NOT NULL,
 	`system_event_subscription_id` int(11) NOT NULL,
@@ -371,20 +371,20 @@ AUTO_INCREMENT = 1
 ROW_FORMAT = Compact
 ;
 
-INSERT INTO `altumo_com`.`_temp_system_event_instance_message`
+INSERT INTO `_temp_system_event_instance_message`
 ( `created_at`, `id`, `received`, `received_at`, `status_message`, `system_event_instance_id`, `system_event_subscription_id`, `updated_at` )
 SELECT
 `created_at`, `id`, `received`, `received_at`, `status_message`, `system_event_instance_id`, `system_event_subscription_id`, `updated_at`
-FROM `altumo_com`.`system_event_instance_message`;
+FROM `system_event_instance_message`;
 
-DROP TABLE `altumo_com`.`system_event_instance_message`;
+DROP TABLE `system_event_instance_message`;
 
-ALTER TABLE `altumo_com`.`_temp_system_event_instance_message` RENAME `system_event_instance_message`;
+ALTER TABLE `_temp_system_event_instance_message` RENAME `system_event_instance_message`;
 
 /* Header line. Object: system_event_subscription. Script date: 10/28/2012 10:40:33 AM. */
-DROP TABLE IF EXISTS `altumo_com`.`_temp_system_event_subscription`;
+DROP TABLE IF EXISTS `_temp_system_event_subscription`;
 
-CREATE TABLE `altumo_com`.`_temp_system_event_subscription` (
+CREATE TABLE `_temp_system_event_subscription` (
 	`id` int(11) NOT NULL auto_increment,
 	`system_event_id` int(11) NOT NULL,
 	`remote_url` varchar(255) default NULL,
@@ -402,20 +402,20 @@ AUTO_INCREMENT = 1
 ROW_FORMAT = Compact
 ;
 
-INSERT INTO `altumo_com`.`_temp_system_event_subscription`
+INSERT INTO `_temp_system_event_subscription`
 ( `created_at`, `enabled`, `id`, `remote_url`, `system_event_id`, `updated_at` )
 SELECT
 `created_at`, `enabled`, `id`, `remote_url`, `system_event_id`, `updated_at`
-FROM `altumo_com`.`system_event_subscription`;
+FROM `system_event_subscription`;
 
-DROP TABLE `altumo_com`.`system_event_subscription`;
+DROP TABLE `system_event_subscription`;
 
-ALTER TABLE `altumo_com`.`_temp_system_event_subscription` RENAME `system_event_subscription`;
+ALTER TABLE `_temp_system_event_subscription` RENAME `system_event_subscription`;
 
 /* Header line. Object: user. Script date: 10/28/2012 10:40:33 AM. */
-DROP TABLE IF EXISTS `altumo_com`.`_temp_user`;
+DROP TABLE IF EXISTS `_temp_user`;
 
-CREATE TABLE `altumo_com`.`_temp_user` (
+CREATE TABLE `_temp_user` (
 	`id` int(11) NOT NULL auto_increment,
 	`password_reset_key` varchar(16) default NULL,
 	`sf_guard_user_id` int(11) NOT NULL,
@@ -436,73 +436,73 @@ AUTO_INCREMENT = 1
 ROW_FORMAT = Compact
 ;
 
-INSERT INTO `altumo_com`.`_temp_user`
+INSERT INTO `_temp_user`
 ( `active`, `created_at`, `id`, `password_reset_key`, `updated_at` )
 SELECT
 `active`, `created_at`, `id`, `password_reset_key`, `updated_at`
-FROM `altumo_com`.`user`;
+FROM `user`;
 
-DROP TABLE `altumo_com`.`user`;
+DROP TABLE `user`;
 
-ALTER TABLE `altumo_com`.`_temp_user` RENAME `user`;
+ALTER TABLE `_temp_user` RENAME `user`;
 
 -- Update foreign keys of contact
-ALTER TABLE `altumo_com`.`contact` ADD CONSTRAINT `contact_FK_1`
+ALTER TABLE `contact` ADD CONSTRAINT `contact_FK_1`
 	FOREIGN KEY ( `state_id` ) REFERENCES `state` ( `id` );
 
 -- Update foreign keys of sf_guard_group_permission
-ALTER TABLE `altumo_com`.`sf_guard_group_permission` ADD CONSTRAINT `sf_guard_group_permission_FK_1`
+ALTER TABLE `sf_guard_group_permission` ADD CONSTRAINT `sf_guard_group_permission_FK_1`
 	FOREIGN KEY ( `group_id` ) REFERENCES `sf_guard_group` ( `id` ) ON DELETE CASCADE;
 
-ALTER TABLE `altumo_com`.`sf_guard_group_permission` ADD CONSTRAINT `sf_guard_group_permission_FK_2`
+ALTER TABLE `sf_guard_group_permission` ADD CONSTRAINT `sf_guard_group_permission_FK_2`
 	FOREIGN KEY ( `permission_id` ) REFERENCES `sf_guard_permission` ( `id` ) ON DELETE CASCADE;
 
 -- Update foreign keys of sf_guard_remember_key
-ALTER TABLE `altumo_com`.`sf_guard_remember_key` ADD CONSTRAINT `sf_guard_remember_key_FK_1`
+ALTER TABLE `sf_guard_remember_key` ADD CONSTRAINT `sf_guard_remember_key_FK_1`
 	FOREIGN KEY ( `user_id` ) REFERENCES `sf_guard_user` ( `id` ) ON DELETE CASCADE;
 
 -- Update foreign keys of sf_guard_user_group
-ALTER TABLE `altumo_com`.`sf_guard_user_group` ADD CONSTRAINT `sf_guard_user_group_FK_1`
+ALTER TABLE `sf_guard_user_group` ADD CONSTRAINT `sf_guard_user_group_FK_1`
 	FOREIGN KEY ( `user_id` ) REFERENCES `sf_guard_user` ( `id` ) ON DELETE CASCADE;
 
-ALTER TABLE `altumo_com`.`sf_guard_user_group` ADD CONSTRAINT `sf_guard_user_group_FK_2`
+ALTER TABLE `sf_guard_user_group` ADD CONSTRAINT `sf_guard_user_group_FK_2`
 	FOREIGN KEY ( `group_id` ) REFERENCES `sf_guard_group` ( `id` ) ON DELETE CASCADE;
 
 -- Update foreign keys of sf_guard_user_permission
-ALTER TABLE `altumo_com`.`sf_guard_user_permission` ADD CONSTRAINT `sf_guard_user_permission_FK_1`
+ALTER TABLE `sf_guard_user_permission` ADD CONSTRAINT `sf_guard_user_permission_FK_1`
 	FOREIGN KEY ( `user_id` ) REFERENCES `sf_guard_user` ( `id` ) ON DELETE CASCADE;
 
-ALTER TABLE `altumo_com`.`sf_guard_user_permission` ADD CONSTRAINT `sf_guard_user_permission_FK_2`
+ALTER TABLE `sf_guard_user_permission` ADD CONSTRAINT `sf_guard_user_permission_FK_2`
 	FOREIGN KEY ( `permission_id` ) REFERENCES `sf_guard_permission` ( `id` ) ON DELETE CASCADE;
 
 -- Update foreign keys of single_sign_on_key
-ALTER TABLE `altumo_com`.`single_sign_on_key` ADD CONSTRAINT `single_sign_on_key_FK_1`
+ALTER TABLE `single_sign_on_key` ADD CONSTRAINT `single_sign_on_key_FK_1`
 	FOREIGN KEY ( `session_id` ) REFERENCES `session` ( `id` ) ON DELETE CASCADE;
 
 -- Update foreign keys of state
-ALTER TABLE `altumo_com`.`state` ADD CONSTRAINT `state_FK_1`
+ALTER TABLE `state` ADD CONSTRAINT `state_FK_1`
 	FOREIGN KEY ( `country_id` ) REFERENCES `country` ( `id` ) ON DELETE CASCADE;
 
 -- Update foreign keys of system_event_instance
-ALTER TABLE `altumo_com`.`system_event_instance` ADD CONSTRAINT `system_event_instance_FK_1`
+ALTER TABLE `system_event_instance` ADD CONSTRAINT `system_event_instance_FK_1`
 	FOREIGN KEY ( `system_event_id` ) REFERENCES `system_event` ( `id` ) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- Update foreign keys of system_event_instance_message
-ALTER TABLE `altumo_com`.`system_event_instance_message` ADD CONSTRAINT `system_event_instance_message_FK_1`
+ALTER TABLE `system_event_instance_message` ADD CONSTRAINT `system_event_instance_message_FK_1`
 	FOREIGN KEY ( `system_event_instance_id` ) REFERENCES `system_event_instance` ( `id` ) ON DELETE CASCADE ON UPDATE CASCADE;
 
-ALTER TABLE `altumo_com`.`system_event_instance_message` ADD CONSTRAINT `system_event_instance_message_FK_2`
+ALTER TABLE `system_event_instance_message` ADD CONSTRAINT `system_event_instance_message_FK_2`
 	FOREIGN KEY ( `system_event_subscription_id` ) REFERENCES `system_event_subscription` ( `id` ) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- Update foreign keys of system_event_subscription
-ALTER TABLE `altumo_com`.`system_event_subscription` ADD CONSTRAINT `system_event_subscription_FK_1`
+ALTER TABLE `system_event_subscription` ADD CONSTRAINT `system_event_subscription_FK_1`
 	FOREIGN KEY ( `system_event_id` ) REFERENCES `system_event` ( `id` ) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- Update foreign keys of user
-ALTER TABLE `altumo_com`.`user` ADD CONSTRAINT `user_FK_1`
+ALTER TABLE `user` ADD CONSTRAINT `user_FK_1`
 	FOREIGN KEY ( `contact_id` ) REFERENCES `contact` ( `id` );
 
-ALTER TABLE `altumo_com`.`user` ADD CONSTRAINT `user_FK_2`
+ALTER TABLE `user` ADD CONSTRAINT `user_FK_2`
 	FOREIGN KEY ( `sf_guard_user_id` ) REFERENCES `sf_guard_user` ( `id` ) ON DELETE CASCADE;
 
 SET @@foreign_key_checks = 1;
